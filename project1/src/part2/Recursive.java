@@ -33,7 +33,12 @@ public class Recursive {
             if(startInputCheck(queenArray)) break;
             else System.out.println("Invalid input. Try again");
         }
+        long tstart = System.currentTimeMillis();
         backTrackAll(start);
+
+        long tend = System.currentTimeMillis();
+        double time = tend - tstart;
+        System.out.println(time);
 
 
 
@@ -65,13 +70,13 @@ public class Recursive {
                 }
             }
         }
-    return true;
+        return true;
     }
 //returns true of the possition is not under attack, else false
 
     public boolean legalPlacement(int y, int x) {
 
-        if(downRight[y+x] == false && upRight[x-y+this.n-1]== false && horizontal[y] == false){
+        if(horizontal[y] == false && downRight[y+x] == false && upRight[x-y+this.n-1]== false){
             return true;
         }
         else {
@@ -80,7 +85,7 @@ public class Recursive {
 
     }
 
-//prints the board
+    //prints the board
     public void printBoard() {
         String str;
         for (int i = 0; i < n; i++) {
@@ -136,7 +141,7 @@ public class Recursive {
         for (int i = 0; i < this.n; i++) {
             if (legalPlacement(i, x)) {
                 putQueen(i, x);
-               // printBoard();
+                // printBoard();
 
                 //System.out.println();
 
@@ -154,11 +159,7 @@ public class Recursive {
 
     public static void main(String[] args) {
         Recursive board = new Recursive();
-        long start = System.currentTimeMillis();
 
-        long end = System.currentTimeMillis();
-        double time = end - start;
-        System.out.println(time);
         System.out.println(board.legalSolutions);
     }
 }

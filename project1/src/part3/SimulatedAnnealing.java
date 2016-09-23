@@ -1,47 +1,81 @@
 package part3;
 
-import java.util.ArrayList;
-import java.util.Random;
+import java.lang.reflect.Array;
+import java.util.*;
 
 /**
  * Created by Eirikpc on 21-Sep-16.
  */
 public class SimulatedAnnealing {
 
-    private int[] queenArray;
-    private int n;
-    Random random;
-    private double temp;
-    private double cooling;
-    private int[] generatedsolution;
-    private int solutionsFound;
+    private int[] startBoard;
+    private int n, solutionsFound;
+    private Random random;
+    private double temp, cooling;
+    private int[] generatedsolution, newGeneratedsolution;
     private ArrayList<String> solutionSet;
 
+
     public SimulatedAnnealing(int n){
+
+        Scanner scanner = new Scanner(System.in);
+        this.startBoard = new int[n];
         random = new Random();
         this.n = n;
-        temp = 1000;
-        cooling = 0.05;
+        temp = 2;
+        cooling = 0.00000005;
         solutionsFound = 0;
         solutionSet = new ArrayList<>();
-        this.queenArray = new int[n];
-        for (int i = 0; i < n; i++) {
-                int randint = random.nextInt(n);
-                queenArray[i] = randint;
+/*
+        System.out.print("n = ");
+        this.n = scanner.nextInt();
+        scanner.nextLine();
+        System.out.print("input = ");
+        this.startBoard = Arrays.stream(scanner.nextLine().split(" ")).mapToInt(Integer::parseInt).toArray();
+*/
+
+
+        sortRows();
+
+        generateStartBoard();
+        printBoard(startBoard);
+    }
+
+    public void sortRows(){
+        boolean[] taken = new boolean[this.n];
+        ArrayList<Integer> collisionColumns = new ArrayList<>();
+
+        for (int col = 0; col < startBoard.length; col++) {
+            if (!taken[startBoard[col]]) taken[startBoard[col]] = true;
+            else collisionColumns.add(col);
+        }
+        for (int row = 0; row < taken.length; row++) {
+            if(taken[row] == false){
+                startBoard[collisionColumns.remove(random.nextInt(collisionColumns.size()))] = row;
+            }
         }
     }
-    public void printBoard(int[] array) {
 
-        String str;
-        for (int i = 0; i < this.n; i++) {
-            str = "";
+
+    public void printBoard(int[] array) {
+        for (int i = this.n-1; i > -1; i--) {
             for (int j = 0; j < this.n; j++) {
-                if(array[j] == i) str+='1';
-                else str+='0';
+                if(array[j] == i) System.out.print("X ");
+                else System.out.print("- ");
             }
-            System.out.println(str);
+            System.out.println();
         }
         System.out.println();
+    }
+
+    public void generateStartBoard(){
+        ArrayList<Integer> numbers = new ArrayList<>();
+        for (int i = 0; i < this.n; i++) {
+            numbers.add(i);
+        }
+        for (int i = 0; i < this.n; i++) {
+            this.startBoard[i] = numbers.remove(random.nextInt(numbers.size()));
+        }
     }
 
     public String solutionString(int[] array){
@@ -54,9 +88,9 @@ public class SimulatedAnnealing {
     }
 
     public void printArray(int[] array){
-        System.out.println("Array:");
+        System.out.print("Array:" );
         for (int i = 0; i < array.length; i++) {
-            System.out.print(array[i]+" ");
+            System.out.print((array[i]+1)+" ");
         }
         System.out.println('\n');
     }
@@ -64,22 +98,24 @@ public class SimulatedAnnealing {
     //generate random possible changes
     //can testing required to find a good solution.
 
-    //moevs a random queen to a random position in the same column.
+    //moves a random queen to a random position in the same column.
 
-    public void generateBoardRandomPosition(){
+    public void swapColumns(){
         int[] array;
-        array = queenArray.clone();
-        array[random.nextInt(this.n)] = random.nextInt(this.n);
-        this.generatedsolution = array;
+        array = generatedsolution.clone();
+        int first = random.nextInt(this.n);
+        int second = random.nextInt(this.n);
+        while(first == second){
+            second = random.nextInt(this.n);
+        }
+        int temp = array[first];
+        array[first] = array[second];
+        array[second] = temp;
+        //printBoard(array);
+        this.newGeneratedsolution = array;
     }
 
-    //moves a random queen one step in the same column.
-    public void generateBoardsOneStep(){
-
-    }
-
-
-    //finds the fitness based on how many queens are currently attacking eachother. 
+    //finds the fitness based on how many queens are currently attacking eachother.
     //downside: the way it is not 3 queens all attacking each other is not that much worse than 2
     public int heuristic(int[] array){
         int cost = 0;
@@ -102,7 +138,7 @@ public class SimulatedAnnealing {
         for (int i = 0; i < horizontal.length; i++) {
             if (horizontal[i] > 0 ) cost += horizontal[i] - 1;
         }
-        System.out.println("cost: "+cost);
+       System.out.println("cost: "+cost);
         return cost;
 
 /*
@@ -122,57 +158,59 @@ public class SimulatedAnnealing {
             System.out.println(i);
         }
         */
-
-
     }
 
     public void simulatedAnnealing(){
-        if(heuristic(queenArray)== 0){
-            String str = solutionString(queenArray);
+        if(heuristic(startBoard)== 0){
+            String str = solutionString(startBoard);
             System.out.println("initial board is a solution!");
-            printArray(queenArray);
-            printBoard(queenArray);
+            printArray(startBoard);
+            printBoard(startBoard);
             if(!solutionSet.contains(str))solutionSet.add(str);
             solutionsFound++;
 
         }
-        while(temp > 0){
-            generateBoardRandomPosition();
-            int cost = heuristic(queenArray);
-            int newCost = heuristic(generatedsolution);
+        generatedsolution = startBoard.clone();
+        while(temp > 1){
+            swapColumns();
+            int cost = heuristic(generatedsolution);
+            int newCost = heuristic(newGeneratedsolution);
             if(newCost == 0 ){
-                String str = solutionString(generatedsolution);
-                System.out.println("solution found!");
-                printArray(generatedsolution);
-                printBoard(generatedsolution);
-                if(!solutionSet.contains(str))solutionSet.add(str);
+                String str = solutionString(newGeneratedsolution);
+                //System.out.println("solution found!");
+
+                if(!solutionSet.contains(str)) {
+
+                    solutionSet.add(str);
+                    //printArray(newGeneratedsolution);
+                    //printBoard(newGeneratedsolution);
+                }
                 solutionsFound++;
+                generatedsolution = startBoard.clone();
+
+                continue;
 
             }
             if(cost > newCost){
-                this.queenArray = generatedsolution;
+                this.generatedsolution = newGeneratedsolution;
             }
             else{
-                if ((Math.exp(-((cost - newCost)/temp)) > Math.random())){
-                    this.queenArray = generatedsolution;
+                if ((Math.exp(-((newCost- cost)/temp)) > Math.random())){
+                    this.generatedsolution = newGeneratedsolution;
                 }
             }
-            this.temp -= this.cooling;
+            this.temp *= 1-this.cooling;
         }
 
 
-        System.out.println("solutions found: "+ solutionsFound);
+        System.out.println("Solutions found: "+ solutionsFound);
         System.out.println("Unique solutions found: "+ solutionSet.size());
-
-
     }
 
     public static void main(String[] args) {
-        SimulatedAnnealing p = new SimulatedAnnealing(5);
-        p.printArray(p.queenArray);
-        p.printBoard(p.queenArray);
-        p.generateBoardRandomPosition();
+        SimulatedAnnealing p = new SimulatedAnnealing(16);
+        p.printArray(p.startBoard);
+        p.printBoard(p.startBoard);
         p.simulatedAnnealing();
     }
-
 }

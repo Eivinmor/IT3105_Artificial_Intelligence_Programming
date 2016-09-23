@@ -5,7 +5,7 @@ import java.util.Scanner;
 public class RecursiveBacktracker {
 
     private boolean stepByStep = false;
-    private boolean solutionsToConsole = false;
+    private boolean solutionsToConsole = true;
 
     private int n;
     private int solutionNum = 0;

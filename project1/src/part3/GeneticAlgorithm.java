@@ -13,7 +13,7 @@ public class GeneticAlgorithm {
     private Scanner reader;
     private int[][] populationArray;
 
-    public GeneticAlgorithm(){
+    private GeneticAlgorithm(){
         reader = new Scanner(System.in);
         this.popSize = 5;
         this.numOfMutations = 1;
@@ -43,7 +43,7 @@ public class GeneticAlgorithm {
         selectParents();
     }
 
-    public void selectParents() {
+    private void selectParents() {
 
 
     }
@@ -52,7 +52,7 @@ public class GeneticAlgorithm {
 
     }
 
-    public void generatePopulation(){
+    private void generatePopulation(){
         
         for (int i = 0; i < popSize; i++) {
             populationArray[i] = swapColumns(startBoard);
@@ -61,7 +61,7 @@ public class GeneticAlgorithm {
         System.out.println();
     }
 
-    public int[] swapColumns(int[] oldArray){
+    private int[] swapColumns(int[] oldArray){
         int[] array = oldArray.clone();
         for (int i = 0; i < this.numOfMutations; i++) {
             int first = random.nextInt(this.n);
@@ -77,7 +77,7 @@ public class GeneticAlgorithm {
         return array;
     }
 
-    public void sortRows(int[] array){
+    private void sortRows(int[] array){
         boolean[] taken = new boolean[this.n];
         ArrayList<Integer> collisionColumns = new ArrayList<>();
 
@@ -92,7 +92,7 @@ public class GeneticAlgorithm {
         }
     }
 
-    public void printBoard(int[] array) {
+    private void printBoard(int[] array) {
         for (int i = this.n-1; i > -1; i--) {
             for (int j = 0; j < this.n; j++) {
                 if(array[j] == i) System.out.print("X ");
@@ -103,7 +103,7 @@ public class GeneticAlgorithm {
         System.out.println();
     }
 
-    public int heuristic(int[] array){
+    public int calculateFitness(int[] array){
         int cost= 0;
         int downRight[] = new int[2*this.n-1];
         int upRight[] = new int[2*this.n-1];
@@ -128,7 +128,7 @@ public class GeneticAlgorithm {
         return cost;
     }
 
-    public void printArray(int[] array){
+    private void printArray(int[] array){
         for (int i = 0; i < array.length; i++) {
             System.out.print((array[i]+1)+" ");
         }
@@ -148,8 +148,7 @@ public class GeneticAlgorithm {
         int parentFitness;
         int[] selectedParents = new int[2*n];
         for (int i = 0; i < populationArray.length; i++) {
-            parentFitness =  heuristic(populationArray[i]);
-
+            parentFitness =  calculateFitness(populationArray[i]);
             parentFitnessArray[i] = parentFitness;
             totalFitness += parentFitness;
         }

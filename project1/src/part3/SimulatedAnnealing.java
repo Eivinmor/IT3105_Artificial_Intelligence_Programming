@@ -10,12 +10,15 @@ public class SimulatedAnnealing {
     private Random random;
     private double temperature, cooling;
     private HashSet<String> solutionSet;
+    private Scanner reader;
+    private boolean input, stepByStep;
 
     // usually finds all solutions for up to n=10 with temp = 20000000, cooling = 0.0000005
     private SimulatedAnnealing(){
 
         // ---- SETTINGS ---------------------------------
-        boolean input = true;
+        input = true;
+        stepByStep = true;
         n = 10;
         temperature = 20000000;
         cooling = 0.0000005;
@@ -24,7 +27,7 @@ public class SimulatedAnnealing {
         solutionsFound = 0;
         random = new Random();
         solutionSet = new HashSet<>();
-        Scanner reader = new Scanner(System.in);
+        reader = new Scanner(System.in);
         this.startBoard = new int[n];
         if (input) {
             System.out.print("n = ");
@@ -71,6 +74,11 @@ public class SimulatedAnnealing {
             }
             this.temperature *= 1-this.cooling;
             swappedBoard = swapColumns(currentBoard);
+            if (stepByStep && solutionsFound == 0) {
+                printBoard(currentBoard);
+                System.out.println("Press Enter to continue...");
+                reader.nextLine();
+            }
         }
     }
 

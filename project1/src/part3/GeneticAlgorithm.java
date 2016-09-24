@@ -7,7 +7,7 @@ public class GeneticAlgorithm {
 
     private boolean input;
     private Random random;
-    private int n, popSize,numOfMutations,solutionsFound, runTime;
+    private int n, popSize,numOfMutations,solutionsFound, runTime, arrayPrintIndexing;
     private int[] startBoard, parents;
     private Scanner reader;
     private int[][] populationArray;
@@ -16,11 +16,12 @@ public class GeneticAlgorithm {
     private GeneticAlgorithm(){
 
         // ---- SETTINGS ---------------------------------
-        input = false;
-        this.n = 20;
-        this.popSize = 20;
+        this.input = false;
+        this.n = 10;
+        this.popSize = 4;
         this.numOfMutations = 1;
-        this.runTime = 10;
+        this.runTime = 5;
+        this.arrayPrintIndexing = 0;
         // -----------------------------------------------
         reader = new Scanner(System.in);
 
@@ -45,7 +46,6 @@ public class GeneticAlgorithm {
         sortRows(startBoard);
         System.out.println("\nSorted initial board:");
         printBoard(startBoard);
-        System.out.println("Initial populaton:");
         populationArray = generatePopulation();
     }
 
@@ -183,7 +183,7 @@ public class GeneticAlgorithm {
         int[][] newPopulationArray = new int[popSize][n];
         for (int i = 0; i < popSize; i++) {
             newPopulationArray[i] = mutate(startBoard);
-            printArray(newPopulationArray[i]);
+//            printArray(newPopulationArray[i]);
         }
         System.out.println();
         return newPopulationArray;
@@ -226,6 +226,7 @@ public class GeneticAlgorithm {
     }
 
     private void printBoard(int[] array) {
+        printArray(array);
         for (int i = this.n-1; i > -1; i--) {
             for (int j = 0; j < this.n; j++) {
                 if(array[j] == i) System.out.print("X ");
@@ -300,7 +301,7 @@ public class GeneticAlgorithm {
 
     private void printArray(int[] array){
         for (int i = 0; i < array.length; i++) {
-            System.out.print((array[i]+1)+" ");
+            System.out.print((array[i]+arrayPrintIndexing)+" ");
         }
         System.out.println();
     }

@@ -15,7 +15,7 @@ public class RecursiveBacktracker {
 
         // ---- SETTINGS ---------------------------------
         stepByStep = false;
-        solutionsToConsole = false;
+        solutionsToConsole = true;
         // -----------------------------------------------
 
         System.out.println("stepByStep = " + stepByStep);

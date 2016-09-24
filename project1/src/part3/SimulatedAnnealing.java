@@ -6,7 +6,7 @@ import java.util.*;
 public class SimulatedAnnealing {
 
     private int[] startBoard;
-    private int n, solutionsFound;
+    private int n, solutionsFound, arrayPrintIndexing;
     private Random random;
     private double temperature, cooling;
     private HashSet<String> solutionSet;
@@ -17,11 +17,12 @@ public class SimulatedAnnealing {
     private SimulatedAnnealing(){
 
         // ---- SETTINGS ---------------------------------
-        input = false;
-        stepByStep = false;
-        n = 10;
-        temperature = 200000;
-        cooling = 0.0000005;
+        this.input = false;
+        this.stepByStep = false;
+        this.n = 10;
+        this.temperature = 200000;
+        this.cooling = 0.0000005;
+        this.arrayPrintIndexing = 0;
         // -----------------------------------------------
 
         solutionsFound = 0;
@@ -156,7 +157,7 @@ public class SimulatedAnnealing {
 
     private void printArray(int[] array){
         for (int i :  array) {
-            System.out.print((i+1) + " ");
+            System.out.print((i+arrayPrintIndexing) + " ");
         }
         System.out.println();
     }

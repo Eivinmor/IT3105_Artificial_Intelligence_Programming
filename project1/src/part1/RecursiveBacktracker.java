@@ -4,18 +4,19 @@ import java.util.Scanner;
 
 public class RecursiveBacktracker {
 
-    private boolean stepByStep = false;
-
+    private boolean stepByStep;
     private int n;
     private Board board;
     private Scanner reader;
 
     private RecursiveBacktracker() {
-        // ----SETTINGS ---------------------------------
+
+        // ---- SETTINGS ---------------------------------
+        stepByStep = false;
+        // -----------------------------------------------
+
         System.out.println("stepByStep = " + stepByStep);
         System.out.println("");
-        // ----------------------------------------------
-
         reader = new Scanner(System.in);
         System.out.println("n=8");
         n = 8;

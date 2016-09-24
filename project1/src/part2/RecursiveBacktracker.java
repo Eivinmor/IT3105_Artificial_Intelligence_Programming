@@ -4,26 +4,28 @@ import java.util.Scanner;
 
 public class RecursiveBacktracker {
 
-    private boolean stepByStep = false;
-    private boolean solutionsToConsole = true;
-
+    private boolean stepByStep;
+    private boolean solutionsToConsole;
     private int n;
     private int solutionNum = 0;
     private Board board;
     private Scanner reader;
 
     private RecursiveBacktracker() {
-        // ----SETTINGS ---------------------------------
+
+        // ---- SETTINGS ---------------------------------
+        stepByStep = false;
+        solutionsToConsole = false;
+        // -----------------------------------------------
+
         System.out.println("stepByStep = " + stepByStep);
         System.out.println("solutionsToConsole = " + solutionsToConsole);
         System.out.println("");
-        // ----------------------------------------------
-
         reader = new Scanner(System.in);
         System.out.print("n:");
         n = reader.nextInt();
-        System.out.print("Initial queen positions:");
         reader.nextLine();
+        System.out.print("Initial queen positions:");
         String initialQueenStr = reader.nextLine();
         board = new Board(n, initialQueenStr);
     }

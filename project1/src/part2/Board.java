@@ -1,6 +1,7 @@
 package part2;
 
 
+@SuppressWarnings("Duplicates")
 class Board {
 
     private boolean[] rowList, upDiagList, dnDiagList;
@@ -86,14 +87,14 @@ class Board {
         queenList[col] = 0;
     }
 
-    public void printList(int[] list){
+    void printList(int[] list){
         for(int e : list) {
             System.out.print(e + " ");
         }
         System.out.println();
     }
 
-    public void printBoard() {
+    void printBoard() {
         printList(queenList);
         for (int i = n-1; i > -1; i--) {
             for (int j = 0; j < n; j++) {

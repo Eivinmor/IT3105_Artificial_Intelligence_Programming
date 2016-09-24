@@ -1,11 +1,7 @@
 package part3;
-
-import java.lang.reflect.Array;
 import java.util.*;
 
-/**
- * Created by xcr on 22/09/16.
- */
+
 @SuppressWarnings("Duplicates")
 public class GeneticAlgorithm {
 
@@ -48,7 +44,8 @@ public class GeneticAlgorithm {
     }
 
     public void selectParents() {
-        
+
+
     }
 
     public void breed(int[] first, int[] second){

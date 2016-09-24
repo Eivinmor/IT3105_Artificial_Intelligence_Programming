@@ -1,123 +1,82 @@
 package part3;
-
-import java.lang.reflect.Array;
 import java.util.*;
 
-/**
- * Created by Eirikpc on 21-Sep-16.
- */
+
+@SuppressWarnings({"Duplicates", "ConstantConditions"})
 public class SimulatedAnnealing {
 
     private int[] startBoard;
     private int n, solutionsFound;
     private Random random;
-    private double temp, cooling;
-    private int[] generatedsolution, newGeneratedsolution;
-    private ArrayList<String> solutionSet;
+    private double temperature, cooling;
+    private HashSet<String> solutionSet;
 
+    // usually finds all solutions for up to n=10 with temp = 20000000, cooling = 0.0000005
+    private SimulatedAnnealing(){
 
-    public SimulatedAnnealing(int n){
+        // ---- SETTINGS ---------------------------------
+        boolean input = true;
+        n = 10;
+        temperature = 20000000;
+        cooling = 0.0000005;
+        // -----------------------------------------------
 
-        Scanner scanner = new Scanner(System.in);
-        this.startBoard = new int[n];
-        random = new Random();
-        this.n = n;
-        temp = 2;
-        cooling = 0.00000005;
         solutionsFound = 0;
-        solutionSet = new ArrayList<>();
-/*
-        System.out.print("n = ");
-        this.n = scanner.nextInt();
-        scanner.nextLine();
-        System.out.print("input = ");
-        this.startBoard = Arrays.stream(scanner.nextLine().split(" ")).mapToInt(Integer::parseInt).toArray();
-*/
-
-
-        sortRows();
-
-        generateStartBoard();
-        printBoard(startBoard);
-    }
-
-    public void sortRows(){
-        boolean[] taken = new boolean[this.n];
-        ArrayList<Integer> collisionColumns = new ArrayList<>();
-
-        for (int col = 0; col < startBoard.length; col++) {
-            if (!taken[startBoard[col]]) taken[startBoard[col]] = true;
-            else collisionColumns.add(col);
-        }
-        for (int row = 0; row < taken.length; row++) {
-            if(taken[row] == false){
-                startBoard[collisionColumns.remove(random.nextInt(collisionColumns.size()))] = row;
-            }
-        }
-    }
-
-
-    public void printBoard(int[] array) {
-        for (int i = this.n-1; i > -1; i--) {
-            for (int j = 0; j < this.n; j++) {
-                if(array[j] == i) System.out.print("X ");
-                else System.out.print("- ");
-            }
+        random = new Random();
+        solutionSet = new HashSet<>();
+        Scanner reader = new Scanner(System.in);
+        this.startBoard = new int[n];
+        if (input) {
+            System.out.print("n = ");
+            this.n = reader.nextInt();
+            reader.nextLine();
+            System.out.print("Initial queen positions:");
+            startBoard = processInput(reader.nextLine());
             System.out.println();
+            System.out.println("Board after sortRowCollision:");
         }
+        else {
+            generateStartBoard();
+            System.out.println();
+            System.out.println("n = " + n);
+            System.out.println();
+            System.out.print("Initial queen positions:");
+        }
+
+        sortRowCollisions(startBoard);
+    }
+
+    private void runAlgorithm(){
         System.out.println();
+        printBoard(startBoard);
+        System.out.println("Running simulated annealing...");
+
+        int[] currentBoard = startBoard.clone();
+        int[] swappedBoard = swapColumns(currentBoard);
+
+        while(temperature > 1){
+            int cost = calculateFitness(currentBoard);
+            int newCost = calculateFitness(swappedBoard);
+            if (newCost == 0 ){
+                String str = arrayToString(swappedBoard);
+                if (!solutionSet.contains(str)) solutionSet.add(str);
+                solutionsFound++;
+            }
+            // Acceptance function
+            if (cost > newCost) currentBoard = swappedBoard;
+            else {
+                if ((Math.exp(-((newCost- cost)/temperature)) > Math.random())){
+                    currentBoard = swappedBoard;
+                }
+            }
+            this.temperature *= 1-this.cooling;
+            swappedBoard = swapColumns(currentBoard);
+        }
     }
 
-    public void generateStartBoard(){
-        ArrayList<Integer> numbers = new ArrayList<>();
-        for (int i = 0; i < this.n; i++) {
-            numbers.add(i);
-        }
-        for (int i = 0; i < this.n; i++) {
-            this.startBoard[i] = numbers.remove(random.nextInt(numbers.size()));
-        }
-    }
-
-    public String solutionString(int[] array){
-        String str = "";
-        for (int i :
-                array) {
-            str+=i;
-        }
-        return str;
-    }
-
-    public void printArray(int[] array){
-        System.out.print("Array:" );
-        for (int i = 0; i < array.length; i++) {
-            System.out.print((array[i]+1)+" ");
-        }
-        System.out.println('\n');
-    }
-
-    //generate random possible changes
-    //can testing required to find a good solution.
-
-    //moves a random queen to a random position in the same column.
-
-    public void swapColumns(){
-        int[] array;
-        array = generatedsolution.clone();
-        int first = random.nextInt(this.n);
-        int second = random.nextInt(this.n);
-        while(first == second){
-            second = random.nextInt(this.n);
-        }
-        int temp = array[first];
-        array[first] = array[second];
-        array[second] = temp;
-        //printBoard(array);
-        this.newGeneratedsolution = array;
-    }
-
-    //finds the fitness based on how many queens are currently attacking eachother.
+    //finds the fitness based on how many queens are currently attacking each other.
     //downside: the way it is not 3 queens all attacking each other is not that much worse than 2
-    public int heuristic(int[] array){
+    private int calculateFitness(int[] array){
         int cost = 0;
         int downRight[] = new int[2*this.n-1];
         int upRight[] = new int[2*this.n-1];
@@ -128,89 +87,93 @@ public class SimulatedAnnealing {
             upRight[x-array[x]+this.n-1]++;
             horizontal[array[x]]++;
         }
-
         //adds 1 to cost if queens are attacking each other
         for (int i = 0; i < downRight.length; i++) {
             if (downRight[i] > 0) cost += downRight[i] - 1;
             if (upRight[i] > 0) cost += upRight[i] - 1;
         }
-
         for (int i = 0; i < horizontal.length; i++) {
             if (horizontal[i] > 0 ) cost += horizontal[i] - 1;
         }
-       System.out.println("cost: "+cost);
         return cost;
-
-/*
-        System.out.println("downRight");
-        for (int i :
-                downRight) {
-            System.out.println(i);
-        }
-        System.out.println("upright");
-        for (int i :
-                upRight) {
-            System.out.println(i);
-        }
-        System.out.println("horizontal");
-        for (int i :
-                horizontal) {
-            System.out.println(i);
-        }
-        */
     }
 
-    public void simulatedAnnealing(){
-        if(heuristic(startBoard)== 0){
-            String str = solutionString(startBoard);
-            System.out.println("initial board is a solution!");
-            printArray(startBoard);
-            printBoard(startBoard);
-            if(!solutionSet.contains(str))solutionSet.add(str);
-            solutionsFound++;
-
+    private int[] swapColumns(int[] oldArray){
+        int[] newArray = oldArray.clone();
+        int first = random.nextInt(this.n);
+        int second = random.nextInt(this.n);
+        while (first == second){
+            second = random.nextInt(this.n);
         }
-        generatedsolution = startBoard.clone();
-        while(temp > 1){
-            swapColumns();
-            int cost = heuristic(generatedsolution);
-            int newCost = heuristic(newGeneratedsolution);
-            if(newCost == 0 ){
-                String str = solutionString(newGeneratedsolution);
-                //System.out.println("solution found!");
+        int temp = newArray[first];
+        newArray[first] = newArray[second];
+        newArray[second] = temp;
+        return newArray;
+    }
 
-                if(!solutionSet.contains(str)) {
-
-                    solutionSet.add(str);
-                    //printArray(newGeneratedsolution);
-                    //printBoard(newGeneratedsolution);
-                }
-                solutionsFound++;
-                generatedsolution = startBoard.clone();
-
-                continue;
-
-            }
-            if(cost > newCost){
-                this.generatedsolution = newGeneratedsolution;
-            }
-            else{
-                if ((Math.exp(-((newCost- cost)/temp)) > Math.random())){
-                    this.generatedsolution = newGeneratedsolution;
-                }
-            }
-            this.temp *= 1-this.cooling;
+    private void sortRowCollisions(int[] array){
+        boolean[] taken = new boolean[this.n];
+        ArrayList<Integer> collisionColumns = new ArrayList<>();
+        for (int col = 0; col < array.length; col++) {
+            if (!taken[array[col]]) taken[array[col]] = true;
+            else collisionColumns.add(col);
         }
+        for (int row = 0; row < taken.length; row++) {
+            if(!taken[row]){
+                array[collisionColumns.remove(random.nextInt(collisionColumns.size()))] = row;
+            }
+        }
+    }
 
+    private int[] processInput(String input) {
+        int[] array = Arrays.stream(input.split(" ")).mapToInt(Integer::parseInt).toArray();
+        for (int i = 0; i < array.length; i++) {
+            array[i]--;
+        }
+        return array;
+    }
 
-        System.out.println("Solutions found: "+ solutionsFound);
-        System.out.println("Unique solutions found: "+ solutionSet.size());
+    private void generateStartBoard(){
+        ArrayList<Integer> numbers = new ArrayList<>();
+        for (int i = 0; i < this.n; i++) numbers.add(i);
+        for (int i = 0; i < this.n; i++) {
+            this.startBoard[i] = numbers.remove(random.nextInt(numbers.size()));
+        }
+    }
+
+    private String arrayToString(int[] array){
+        String str = "";
+        for (int i : array) str += i;
+        return str;
+    }
+
+    private void printArray(int[] array){
+        for (int i :  array) {
+            System.out.print((i+1) + " ");
+        }
+        System.out.println();
+    }
+
+    private void printBoard(int[] queenArray) {
+        printArray(queenArray);
+        for (int i = n-1; i > -1; i--) {
+            for (int j = 0; j < n; j++) {
+                if (queenArray[j] == i) System.out.print("X ");
+                else System.out.print("- ");
+            }
+            System.out.println();
+        }
+        System.out.println();
     }
 
     public static void main(String[] args) {
-        SimulatedAnnealing p = new SimulatedAnnealing(16);
-        p.printArray(p.startBoard);
-        p.printBoard(p.startBoard);
-        p.simulatedAnnealing();
+        SimulatedAnnealing simAn = new SimulatedAnnealing();
+        long startTime = System.currentTimeMillis();
+        simAn.runAlgorithm();
+        long endTime = System.currentTimeMillis();
+        double executionTime = endTime - startTime;
+        System.out.println("\nSolutions found: "+ simAn.solutionsFound);
+        System.out.println("Unique solutions found: "+ simAn.solutionSet.size());
+        System.out.println("Execution time: " + executionTime/1000 + " seconds");
     }
 }

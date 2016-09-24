@@ -17,10 +17,10 @@ public class SimulatedAnnealing {
     private SimulatedAnnealing(){
 
         // ---- SETTINGS ---------------------------------
-        input = true;
-        stepByStep = true;
+        input = false;
+        stepByStep = false;
         n = 10;
-        temperature = 20000000;
+        temperature = 200000;
         cooling = 0.0000005;
         // -----------------------------------------------
 
@@ -45,7 +45,6 @@ public class SimulatedAnnealing {
             System.out.println();
             System.out.print("Initial queen positions:");
         }
-
         sortRowCollisions(startBoard);
     }
 

@@ -2,22 +2,27 @@ package part3;
 import java.util.*;
 
 
-@SuppressWarnings("Duplicates")
+@SuppressWarnings({"Duplicates", "FieldCanBeLocal"})
 public class GeneticAlgorithm {
 
-    private boolean input = false;
-
+    private boolean input;
     private Random random;
-    private int n, popSize,numOfMutations;
-    private int[] startBoard;
+    private int n, popSize,numOfMutations,solutionsFound, runTime;
+    private int[] startBoard, parents;
     private Scanner reader;
     private int[][] populationArray;
+    private HashSet<String> solutionSet;
 
     private GeneticAlgorithm(){
-        reader = new Scanner(System.in);
-        this.popSize = 5;
+
+        // ---- SETTINGS ---------------------------------
+        input = false;
+        this.n = 20;
+        this.popSize = 20;
         this.numOfMutations = 1;
-        this.n = 6;
+        this.runTime = 10;
+        // -----------------------------------------------
+        reader = new Scanner(System.in);
 
         if (input){
             System.out.print("n = ");
@@ -29,6 +34,8 @@ public class GeneticAlgorithm {
                 this.startBoard = Arrays.stream(initialBoardString.split(" ")).mapToInt(Integer::parseInt).toArray();
             }
         }
+        this.solutionsFound = 0;
+        this.solutionSet = new HashSet<>();
         this.startBoard = new int[n];
         this.random = new Random();
         this.populationArray = new int[popSize][n];
@@ -39,19 +46,30 @@ public class GeneticAlgorithm {
         System.out.println("\nSorted initial board:");
         printBoard(startBoard);
         System.out.println("Initial populaton:");
-        generatePopulation();
-        selectParents();
+        populationArray = generatePopulation();
     }
 
-    private void selectParents() {
+    private void runAlgorithm() {
+        long startTime = System.currentTimeMillis();
+        long currentTime = System.currentTimeMillis();
+        while(currentTime - startTime < runTime*1000){
+            parents = selectParents();
+            breed(populationArray[parents[0]], populationArray[parents[1]]);
+
+            currentTime = System.currentTimeMillis();
+        }
+
+    }
+
+    private int[] selectParents() {
         int[] parentFitnessArray = new int[popSize];
         int[] bestParentIndex = new int[2];
         int currentBest = 4*this.n;
 
-        for (int i = 0; i < parentFitnessArray.length; i++){
-            parentFitnessArray[i] = calculateFitness(populationArray[i]);
+        for (int i = 0; i < popSize; i++){
+            parentFitnessArray[i] = calculateFitness2(populationArray[i]);
         }
-        printArray(parentFitnessArray);
+//        printArray(parentFitnessArray);
 
         for (int i = 0; i < bestParentIndex.length; i++) {
             for (int j = 0; j < parentFitnessArray.length; j++) {
@@ -65,25 +83,69 @@ public class GeneticAlgorithm {
         }
 
         //check
-        for (int i = 0; i < bestParentIndex.length; i++) {
-            System.out.println(calculateFitness(populationArray[bestParentIndex[i]]));
-        }
+//        for (int i = 0; i < bestParentIndex.length; i++) {
+//            System.out.println(calculateFitness(populationArray[bestParentIndex[i]]));
+//        }
 
-        breed(populationArray[bestParentIndex[0]], populationArray[bestParentIndex[1]]);
-
+        return bestParentIndex;
     }
 
-    public void breed(int[] first, int[] second){
+    private int[] selectParents2(int[][] populationArray) {
+        int[] parentFitnessArray = new int[popSize];
+        int[][] parentCouplesArray = new int[popSize][2];
+        int parentFitness;
+        int totalFitness = 0;
 
-        System.out.println("Breeding First");
-        printArray(first);
-        printBoard(first);
-        System.out.println("Second");
-        printArray(second);
-        printBoard(second);
+        for (int i = 0; i < popSize; i++){
+            parentFitness = calculateFitness2(populationArray[i]);
+            parentFitnessArray[i] = parentFitness;
+            totalFitness += parentFitness;
+        }
+//        printArray(parentFitnessArray);
+        for (int i = 0; i < popSize; i++) {
+            parentFitnessArray[i] = totalFitness-parentFitnessArray[i];
+        }
+        totalFitness = 0;
+        for (int i = 0; i < popSize; i++) {
+            totalFitness+= parentFitnessArray[i];
+        }
 
-        System.out.println("Initial population");
-        printPopulation(populationArray);
+        double parentPointer = random.nextDouble() * totalFitness;
+        for (int i = 0; i < popSize; i++) {
+
+//            System.out.println("TotalFitness = " + totalFitness + " InitFitness = " + parentFitnessArray[i] + "ParentPointer = " + parentPointer);
+            parentPointer -= (parentFitnessArray[i]);
+            if (parentPointer < 0.0){
+                parentCouplesArray[0][0] = i;
+                break;
+            }
+        }
+        parentCouplesArray[0][1] = parentCouplesArray[0][0];
+        while (parentCouplesArray[0][0] == parentCouplesArray[0][1]) {
+            parentPointer = random.nextDouble() * totalFitness;
+            for (int i = 0; i < popSize; i++) {
+                parentPointer -= (parentFitnessArray[i]);
+                if (parentPointer < 0.0){
+                    parentCouplesArray[0][1] = i;
+                    break;
+                }
+            }
+        }
+//        printArray(parentCouplesArray[0]);
+        return parentCouplesArray[0];
+    }
+
+    private void breed(int[] first, int[] second){
+
+//        System.out.println("Breeding First");
+//        printArray(first);
+//        printBoard(first);
+//        System.out.println("Second");
+//        printArray(second);
+//        printBoard(second);
+
+//        System.out.println("Initial population");
+//        printPopulation(populationArray);
 
 
         for (int i = 0; i < popSize; i++) {
@@ -104,7 +166,7 @@ public class GeneticAlgorithm {
 //            printArray(child);
 //            printBoard(child);
 
-            child = swapColumns(child);
+            child = mutate(child);
 
 //            printArray(child);
 //            printBoard(child);
@@ -112,34 +174,40 @@ public class GeneticAlgorithm {
             populationArray[i] = child;
         }
 
-        System.out.println("neww population");
-        printPopulation(populationArray);
+//        System.out.println("neww population");
+//        printPopulation(populationArray);
 
     }
 
-    private void generatePopulation(){
-
+    private int[][] generatePopulation(){
+        int[][] newPopulationArray = new int[popSize][n];
         for (int i = 0; i < popSize; i++) {
-            populationArray[i] = swapColumns(startBoard);
-            printArray(populationArray[i]);
+            newPopulationArray[i] = mutate(startBoard);
+            printArray(newPopulationArray[i]);
         }
         System.out.println();
+        return newPopulationArray;
     }
 
-    private int[] swapColumns(int[] oldArray){
+    private int[] mutate(int[] oldArray){
         int[] array = oldArray.clone();
         for (int i = 0; i < this.numOfMutations; i++) {
-            int first = random.nextInt(this.n);
-            int second = random.nextInt(this.n);
-            while(first == second){
-                second = random.nextInt(this.n);
-            }
-            int currentBestParent = array[first];
-            array[first] = array[second];
-            array[second] = currentBestParent;
-            System.out.println("Swapped column "+first+" with " + second);
+            swapColumns(array);
+//            printArray(array);
         }
         return array;
+    }
+
+    private void swapColumns(int[] array) {
+        int first = random.nextInt(array.length);
+        int second = random.nextInt(array.length);
+        while(first == second){
+            second = random.nextInt(array.length);
+        }
+        int currentBestParent = array[first];
+        array[first] = array[second];
+        array[second] = currentBestParent;
+//        System.out.println("Swapped column "+first+" with " + second);
     }
 
     private void sortRows(int[] array){
@@ -168,7 +236,7 @@ public class GeneticAlgorithm {
         System.out.println();
     }
 
-    public int calculateFitness(int[] array){
+    private int calculateFitnessWithRows(int[] array){
         int cost= 0;
         int downRight[] = new int[2*this.n-1];
         int upRight[] = new int[2*this.n-1];
@@ -190,6 +258,43 @@ public class GeneticAlgorithm {
             if (horizontal[i] > 0 ) cost += horizontal[i] - 1;
         }
         // System.out.println("cost: "+cost);
+        if(cost == 0){
+//            if(!solutionSet.contains(arrayToString(array))) {
+//                System.out.println("Solution found!!!");
+//                printArray(array);
+//                printBoard(array);
+//            }
+            solutionSet.add(arrayToString(array));
+            solutionsFound++;
+        }
+        return cost;
+    }
+
+    private int calculateFitness2(int[] array){
+        int cost = 0;
+        int downRight[] = new int[2*this.n-1];
+        int upRight[] = new int[2*this.n-1];
+        //finds queen and increment its row and diagonal values.
+        for (int x = 0; x < array.length; x++) {
+            downRight[array[x]+x]++;
+            upRight[x-array[x]+this.n-1]++;
+        }
+
+        //adds 1 to cost if queens are attacking each other
+        for (int i = 0; i < downRight.length; i++) {
+            if (downRight[i] > 0) cost += downRight[i] - 1;
+            if (upRight[i] > 0) cost += upRight[i] - 1;
+        }
+        // System.out.println("cost: "+cost);
+        if(cost == 0){
+//            if(!solutionSet.contains(arrayToString(array))) {
+//                System.out.println("Solution found!!!");
+//                printArray(array);
+//                printBoard(array);
+//            }
+            solutionSet.add(arrayToString(array));
+            solutionsFound++;
+        }
         return cost;
     }
 
@@ -199,6 +304,7 @@ public class GeneticAlgorithm {
         }
         System.out.println();
     }
+
     private void printPopulation(int[][] array){
         for (int i = 0; i < array.length; i++) {
             printArray(array[i]);
@@ -206,10 +312,33 @@ public class GeneticAlgorithm {
         }
     }
 
+    private String arrayToString(int[] array){
+        String str = "";
+        for (int i : array) str += i;
+        return str;
+    }
 
     public static void main(String[] args) {
         GeneticAlgorithm ga = new GeneticAlgorithm();
+        long startTime = System.currentTimeMillis();
+        ga.runAlgorithm();
+        long endTime = System.currentTimeMillis();
+        double executionTime = endTime - startTime;
+        System.out.println("n = " + ga.n);
+        System.out.println("popSize = " + ga.popSize);
+        System.out.println("numOfMutations = " +ga.numOfMutations);
+        System.out.println("\nSolutions found: "+ ga.solutionsFound);
+        System.out.println("Unique solutions found: "+ ga.solutionSet.size());
+        System.out.println("Execution time: " + executionTime/1000 + " seconds");
+
     }
+
+//    public static void main(String[] args) {
+//        GeneticAlgorithm ga = new GeneticAlgorithm();
+//        int[] testArray = new int[] {1,3,4,2};
+//        ga.printArray(testArray);
+//        int[] mutatedArray = ga.mutate(testArray);
+//    }
 
 }
 /*    public void selectParents(){

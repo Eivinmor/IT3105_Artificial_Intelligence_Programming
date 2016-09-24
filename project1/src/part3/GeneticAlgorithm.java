@@ -204,9 +204,9 @@ public class GeneticAlgorithm {
         while(first == second){
             second = random.nextInt(array.length);
         }
-        int currentBestParent = array[first];
+        int temp = array[first];
         array[first] = array[second];
-        array[second] = currentBestParent;
+        array[second] = temp;
 //        System.out.println("Swapped column "+first+" with " + second);
     }
 
@@ -225,17 +225,7 @@ public class GeneticAlgorithm {
         }
     }
 
-    private void printBoard(int[] array) {
-        printArray(array);
-        for (int i = this.n-1; i > -1; i--) {
-            for (int j = 0; j < this.n; j++) {
-                if(array[j] == i) System.out.print("X ");
-                else System.out.print("- ");
-            }
-            System.out.println();
-        }
-        System.out.println();
-    }
+
 
     private int calculateFitnessWithRows(int[] array){
         int cost= 0;
@@ -297,6 +287,18 @@ public class GeneticAlgorithm {
             solutionsFound++;
         }
         return cost;
+    }
+
+    private void printBoard(int[] array) {
+        printArray(array);
+        for (int i = this.n-1; i > -1; i--) {
+            for (int j = 0; j < this.n; j++) {
+                if(array[j] == i) System.out.print("X ");
+                else System.out.print("- ");
+            }
+            System.out.println();
+        }
+        System.out.println();
     }
 
     private void printArray(int[] array){

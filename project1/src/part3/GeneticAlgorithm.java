@@ -1,9 +1,7 @@
 package part3;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Random;
-import java.util.Scanner;
+import java.lang.reflect.Array;
+import java.util.*;
 
 /**
  * Created by xcr on 22/09/16.
@@ -21,14 +19,9 @@ public class GeneticAlgorithm {
 
     public GeneticAlgorithm(){
         reader = new Scanner(System.in);
-        this.n = 5;
         this.popSize = 5;
         this.numOfMutations = 1;
-
-
-        this.startBoard = new int[n];
-        this.random = new Random();
-        this.populationArray = new int[popSize][n];
+        this.n = 5;
 
         if (input){
             System.out.print("n = ");
@@ -39,9 +32,10 @@ public class GeneticAlgorithm {
             if (initialBoardString.length()>0){
                 this.startBoard = Arrays.stream(initialBoardString.split(" ")).mapToInt(Integer::parseInt).toArray();
             }
-
         }
-
+        this.startBoard = new int[n];
+        this.random = new Random();
+        this.populationArray = new int[popSize][n];
 
         System.out.println("Initial board:");
         printBoard(startBoard);
@@ -51,44 +45,23 @@ public class GeneticAlgorithm {
         System.out.println("Initial populaton:");
         generatePopulation();
         selectParents();
-
-
     }
 
-    public void selectParents(){
-        int[] parentFitness = new int[popSize];
-        int currentBestParent = 0;
-        for (int i = 0; i < popSize; i++) {
-            parentFitness[i] = heuristic(populationArray[i]);
-        }
-        printArray(parentFitness);
-        int[] bestParents = new int[2];
-        for (int i = 0; i < bestParents.length; i++) {
-            for (int j = 0; j < popSize; j++) {
-                if (parentFitness[j] > bestParents[i]){
-                    System.out.println("Index: " + j + " - Heuristic: " + parentFitness[j]);
-                    bestParents[i] = j;
-                    currentBestParent = j;
-                }
-            }
-            parentFitness[currentBestParent] = 0;
-        }
-        printArray(bestParents);
-
+    public void selectParents() {
+        
     }
+
     public void breed(int[] first, int[] second){
 
     }
-
 
     public void generatePopulation(){
         
         for (int i = 0; i < popSize; i++) {
             populationArray[i] = swapColumns(startBoard);
             printArray(populationArray[i]);
-            printBoard(populationArray[i]);
-
         }
+        System.out.println();
     }
 
     public int[] swapColumns(int[] oldArray){
@@ -102,8 +75,7 @@ public class GeneticAlgorithm {
             int currentBestParent = array[first];
             array[first] = array[second];
             array[second] = currentBestParent;
-            
-            
+
         }
         return array;
     }
@@ -134,7 +106,6 @@ public class GeneticAlgorithm {
         System.out.println();
     }
 
-
     public int heuristic(int[] array){
         int cost= 0;
         int downRight[] = new int[2*this.n-1];
@@ -157,9 +128,7 @@ public class GeneticAlgorithm {
             if (horizontal[i] > 0 ) cost += horizontal[i] - 1;
         }
         // System.out.println("cost: "+cost);
-        System.out.println("Cost: " + cost);
         return cost;
-
     }
 
     public void printArray(int[] array){
@@ -172,7 +141,6 @@ public class GeneticAlgorithm {
 
     public static void main(String[] args) {
         GeneticAlgorithm ga = new GeneticAlgorithm();
-
     }
 
 }

@@ -18,13 +18,13 @@ public class TabuSearch {
     private TabuSearch(){
 
         // ---- SETTINGS ---------------------------------
-        this.input = false;
+        this.input = true;
         this.stepByStep = false;
-        this.n = 50; // Number of neighbours = (n(n-1))/2
-        this.arrayPrintIndexing = 0;
-        this.runTime = 30;
-        this.maxTabuSize = Integer.MAX_VALUE;
+        this.n = 4; // Number of neighbours = (n(n-1))/2
+        this.runTime = 15;
+        this.maxTabuSize = 30000;
         this.eliteThreshold = 0;
+        this.arrayPrintIndexing = 1;
         // -----------------------------------------------
 
         solutionSet = new HashSet<>();
@@ -40,9 +40,13 @@ public class TabuSearch {
             this.n = reader.nextInt();
             reader.nextLine();
             System.out.print("Initial queen positions:");
-            startBoard = processInput(reader.nextLine());
+            String initialBoardString = reader.nextLine();
+            if (initialBoardString.length()>0) {
+                startBoard = processInput(initialBoardString);
+            }
+            else generateStartBoard();
             System.out.println();
-            System.out.println("Board after sortRowCollision:");
+
         }
         else {
             generateStartBoard();
@@ -50,12 +54,13 @@ public class TabuSearch {
             System.out.println("n = " + n);
             System.out.println();
             System.out.print("Initial queen positions:");
-            printArray(startBoard);
-            System.out.println();
+
         }
+        printBoard(startBoard);
 
         sortRowCollisions(startBoard);
-
+        System.out.println("Board after sortRowCollision:");
+        printBoard(startBoard);
         neighbourSet = generateNeighbours(startBoard);
 //        printHashSet(neighbourSet);
 
@@ -183,7 +188,6 @@ public class TabuSearch {
         int[] array = Arrays.stream(input.split(" ")).mapToInt(Integer::parseInt).toArray();
         ArrayList<Integer> arrayList = new ArrayList<>();
         for (int i = 0; i < array.length; i++) {
-
             arrayList.add(array[i]--);
         }
         return arrayList;

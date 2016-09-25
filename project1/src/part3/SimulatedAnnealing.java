@@ -8,7 +8,7 @@ public class SimulatedAnnealing {
     private int[] startBoard;
     private int n, solutionsFound, arrayPrintIndexing;
     private Random random;
-    private double temperature, cooling;
+    private double temperature, cooling, minTemperature;
     private HashSet<String> solutionSet;
     private Scanner reader;
     private boolean input, stepByStep;
@@ -19,10 +19,11 @@ public class SimulatedAnnealing {
         // ---- SETTINGS ---------------------------------
         this.input = false;
         this.stepByStep = false;
-        this.n = 10;
-        this.temperature = 200000;
+        this.n = 50;
+        this.temperature = 1;
+        this.minTemperature = 0.000000005;
         this.cooling = 0.0000005;
-        this.arrayPrintIndexing = 0;
+        this.arrayPrintIndexing = 1;
         // -----------------------------------------------
 
         solutionsFound = 0;
@@ -57,13 +58,12 @@ public class SimulatedAnnealing {
         int[] currentBoard = startBoard.clone();
         int[] swappedBoard = swapColumns(currentBoard);
 
-        while(temperature > 1){
+        while(temperature > minTemperature && solutionSet.size() < 100000){
             int cost = calculateFitness(currentBoard);
             int newCost = calculateFitness(swappedBoard);
             if (newCost == 0 ){
                 String str = arrayToString(swappedBoard);
-                if (!solutionSet.contains(str)) solutionSet.add(str);
-                solutionsFound++;
+                if (solutionSet.add(str)) solutionsFound++;
             }
             // Acceptance function
             if (cost > newCost) currentBoard = swappedBoard;
@@ -88,21 +88,19 @@ public class SimulatedAnnealing {
         int cost = 0;
         int downRight[] = new int[2*this.n-1];
         int upRight[] = new int[2*this.n-1];
-        int horizontal[] = new int[array.length];
+
         //finds queen and increment its row and diagonal values.
         for (int x = 0; x < array.length; x++) {
             downRight[array[x]+x]++;
             upRight[x-array[x]+this.n-1]++;
-            horizontal[array[x]]++;
+
         }
         //adds 1 to cost if queens are attacking each other
         for (int i = 0; i < downRight.length; i++) {
             if (downRight[i] > 0) cost += downRight[i] - 1;
             if (upRight[i] > 0) cost += upRight[i] - 1;
         }
-        for (int i = 0; i < horizontal.length; i++) {
-            if (horizontal[i] > 0 ) cost += horizontal[i] - 1;
-        }
+
         return cost;
     }
 
@@ -175,13 +173,14 @@ public class SimulatedAnnealing {
     }
 
     public static void main(String[] args) {
-        SimulatedAnnealing simAn = new SimulatedAnnealing();
+        SimulatedAnnealing sa = new SimulatedAnnealing();
         long startTime = System.currentTimeMillis();
-        simAn.runAlgorithm();
+        sa.runAlgorithm();
         long endTime = System.currentTimeMillis();
         double executionTime = endTime - startTime;
-        System.out.println("\nSolutions found: "+ simAn.solutionsFound);
-        System.out.println("Unique solutions found: "+ simAn.solutionSet.size());
+        System.out.println("n = " + sa.n);
+        System.out.println("Solutions found: "+ sa.solutionsFound);
+        System.out.println("Unique solutions found: "+ sa.solutionSet.size());
         System.out.println("Execution time: " + executionTime/1000 + " seconds");
     }
 }

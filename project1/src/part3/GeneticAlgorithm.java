@@ -17,13 +17,14 @@ public class GeneticAlgorithm {
 
         // ---- SETTINGS ---------------------------------
         this.input = false;
-        this.n = 10;
-        this.popSize = 4;
+        this.n = 30;
+        this.popSize = 1000;
         this.numOfMutations = 1;
-        this.runTime = 5;
-        this.arrayPrintIndexing = 0;
+        this.runTime = 30;
+        this.arrayPrintIndexing = 1;
         // -----------------------------------------------
         reader = new Scanner(System.in);
+        this.startBoard = new int[n];
 
         if (input){
             System.out.print("n = ");
@@ -32,12 +33,11 @@ public class GeneticAlgorithm {
             System.out.print("input = ");
             String initialBoardString = reader.nextLine();
             if (initialBoardString.length()>0){
-                this.startBoard = Arrays.stream(initialBoardString.split(" ")).mapToInt(Integer::parseInt).toArray();
+                this.startBoard = processInput(initialBoardString);
             }
         }
         this.solutionsFound = 0;
         this.solutionSet = new HashSet<>();
-        this.startBoard = new int[n];
         this.random = new Random();
         this.populationArray = new int[popSize][n];
 
@@ -319,6 +319,14 @@ public class GeneticAlgorithm {
         String str = "";
         for (int i : array) str += i;
         return str;
+    }
+
+    private int[] processInput(String input) {
+        int[] array = Arrays.stream(input.split(" ")).mapToInt(Integer::parseInt).toArray();
+        for (int i = 0; i < array.length; i++) {
+            array[i]--;
+        }
+        return array;
     }
 
     public static void main(String[] args) {

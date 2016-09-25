@@ -19,7 +19,7 @@ public class SimulatedAnnealing {
         // ---- SETTINGS ---------------------------------
         this.input = false;
         this.stepByStep = false;
-        this.n = 50;
+        this.n = 30;
         this.temperature = 1;
         this.minTemperature = 0.000000005;
         this.cooling = 0.0000005;

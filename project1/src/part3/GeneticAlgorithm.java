@@ -10,18 +10,18 @@ public class GeneticAlgorithm {
     private int n, popSize,numOfMutations,solutionsFound, runTime, arrayPrintIndexing;
     private int[] startBoard, parents;
     private Scanner reader;
-    private int[][] populationArray;
+    private int[][] populationArray,parents2;
     private HashSet<String> solutionSet;
 
     private GeneticAlgorithm(){
 
         // ---- SETTINGS ---------------------------------
         this.input = false;
-        this.n = 30;
-        this.popSize = 1000;
+        this.n = 15;
         this.numOfMutations = 1;
         this.runTime = 30;
         this.arrayPrintIndexing = 1;
+
         // -----------------------------------------------
         reader = new Scanner(System.in);
         this.startBoard = new int[n];
@@ -36,6 +36,8 @@ public class GeneticAlgorithm {
                 this.startBoard = processInput(initialBoardString);
             }
         }
+
+        this.popSize = 3; //5*n;
         this.solutionsFound = 0;
         this.solutionSet = new HashSet<>();
         this.random = new Random();
@@ -53,8 +55,21 @@ public class GeneticAlgorithm {
         long startTime = System.currentTimeMillis();
         long currentTime = System.currentTimeMillis();
         while(currentTime - startTime < runTime*1000){
-            parents = selectParents();
-            breed(populationArray[parents[0]], populationArray[parents[1]]);
+//        while(solutionSet.size() < 100){
+//            parents = selectParents();
+//            breed(populationArray[parents[0]], populationArray[parents[1]]);
+
+
+            parents2 = selectParents2(populationArray);
+
+//            for (int i = 0; i < parents2.length; i++) {
+//                printArray(parents2[i]);
+//            }
+
+            breed2();
+
+
+
 
             currentTime = System.currentTimeMillis();
         }
@@ -90,7 +105,7 @@ public class GeneticAlgorithm {
         return bestParentIndex;
     }
 
-    private int[] selectParents2(int[][] populationArray) {
+    private int[][] selectParents2(int[][] populationArray) {
         int[] parentFitnessArray = new int[popSize];
         int[][] parentCouplesArray = new int[popSize][2];
         int parentFitness;
@@ -110,29 +125,33 @@ public class GeneticAlgorithm {
             totalFitness+= parentFitnessArray[i];
         }
 
-        double parentPointer = random.nextDouble() * totalFitness;
-        for (int i = 0; i < popSize; i++) {
-
-//            System.out.println("TotalFitness = " + totalFitness + " InitFitness = " + parentFitnessArray[i] + "ParentPointer = " + parentPointer);
-            parentPointer -= (parentFitnessArray[i]);
-            if (parentPointer < 0.0){
-                parentCouplesArray[0][0] = i;
-                break;
-            }
-        }
-        parentCouplesArray[0][1] = parentCouplesArray[0][0];
-        while (parentCouplesArray[0][0] == parentCouplesArray[0][1]) {
+            double parentPointer;
+        for (int j = 0; j < popSize; j++) {
             parentPointer = random.nextDouble() * totalFitness;
             for (int i = 0; i < popSize; i++) {
+
+    //            System.out.println("TotalFitness = " + totalFitness + " InitFitness = " + parentFitnessArray[i] + "ParentPointer = " + parentPointer);
                 parentPointer -= (parentFitnessArray[i]);
                 if (parentPointer < 0.0){
-                    parentCouplesArray[0][1] = i;
+                    parentCouplesArray[j][0] = i;
                     break;
                 }
             }
+            parentCouplesArray[j][1] = parentCouplesArray[j][0];
+            while (parentCouplesArray[j][0] == parentCouplesArray[j][1]) {
+                parentPointer = random.nextDouble() * totalFitness;
+                for (int i = 0; i < popSize; i++) {
+                    parentPointer -= (parentFitnessArray[i]);
+                    if (parentPointer < 0.0){
+                        parentCouplesArray[j][1] = i;
+                        break;
+                    }
+                }
+            }
+
         }
 //        printArray(parentCouplesArray[0]);
-        return parentCouplesArray[0];
+        return parentCouplesArray;
     }
 
     private void breed(int[] first, int[] second){
@@ -178,6 +197,34 @@ public class GeneticAlgorithm {
 //        printPopulation(populationArray);
 
     }
+    private void breed2(){
+
+
+
+        for (int i = 0; i < popSize; i++) {
+
+            int[] child = new int[n];
+
+            //optimise!!! use two for loops or copy first, insert second.
+            for (int j = 0; j < this.n; j++) {
+                if (j <= (n-1)/2) child[j] = populationArray[parents2[i][0]][j];
+
+                else child[j] = populationArray[parents2[i][0]][j];
+            }
+//            System.out.println("child");
+//            printArray(child);
+            sortRows(child);
+
+            child = mutate(child);
+
+            populationArray[i] = child;
+        }
+
+//        System.out.println("neww population");
+//        printPopulation(populationArray);
+
+    }
+
 
     private int[][] generatePopulation(){
         int[][] newPopulationArray = new int[popSize][n];

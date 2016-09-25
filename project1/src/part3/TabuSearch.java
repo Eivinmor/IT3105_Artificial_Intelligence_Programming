@@ -18,11 +18,11 @@ public class TabuSearch {
     private TabuSearch(){
 
         // ---- SETTINGS ---------------------------------
-        this.input = true;
+        this.input = false;
         this.stepByStep = false;
-        this.n = 4; // Number of neighbours = (n(n-1))/2
+        this.n = 18; // Number of neighbours = (n(n-1))/2
         this.runTime = 15;
-        this.maxTabuSize = 30000;
+        this.maxTabuSize = 3000;
         this.eliteThreshold = 0;
         this.arrayPrintIndexing = 1;
         // -----------------------------------------------

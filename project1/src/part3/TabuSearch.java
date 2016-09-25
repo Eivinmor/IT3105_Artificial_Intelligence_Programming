@@ -1,19 +1,18 @@
 package part3;
 
-import java.lang.reflect.Array;
 import java.util.*;
 
-/**
- * Created by Eirikpc on 24-Sep-16.
- */
+
 @SuppressWarnings("Duplicates")
 public class TabuSearch {
     private ArrayList<Integer> startBoard;
-    private int n, arrayPrintIndexing,runTime;
+    private ArrayList<ArrayList<Integer>> eliteArray;
+    private int n, arrayPrintIndexing,runTime, maxTabuSize, eliteThreshold;
     private Random random;
     private HashSet<ArrayList<Integer>> solutionSet,tabuSet,neighbourSet;
     private Scanner reader;
     private boolean input, stepByStep;
+
 
 
     private TabuSearch(){
@@ -21,14 +20,17 @@ public class TabuSearch {
         // ---- SETTINGS ---------------------------------
         this.input = false;
         this.stepByStep = false;
-        this.n = 16;
+        this.n = 50; // Number of neighbours = (n(n-1))/2
         this.arrayPrintIndexing = 0;
-        this.runTime = 120;
+        this.runTime = 30;
+        this.maxTabuSize = Integer.MAX_VALUE;
+        this.eliteThreshold = 0;
         // -----------------------------------------------
 
         solutionSet = new HashSet<>();
         tabuSet = new HashSet<>();
         neighbourSet = new HashSet<>();
+        eliteArray = new ArrayList<>();
 
         reader = new Scanner(System.in);
         this.startBoard = new ArrayList<>();
@@ -51,11 +53,11 @@ public class TabuSearch {
             printArray(startBoard);
             System.out.println();
         }
+
         sortRowCollisions(startBoard);
 
-
-
-
+        neighbourSet = generateNeighbours(startBoard);
+//        printHashSet(neighbourSet);
 
 
 
@@ -63,31 +65,41 @@ public class TabuSearch {
 
     private void runAlgorithm(){
         ArrayList<Integer> currentBoard = this.startBoard;
+        ArrayList<ArrayList<Integer>> tabuOrderArray = new ArrayList<>();
         long startTime = System.currentTimeMillis();
         long currentTime = System.currentTimeMillis();
         while(currentTime - startTime < runTime*1000){
 
+            if (tabuOrderArray.size() == maxTabuSize) {
+                ArrayList<Integer> deleteTabu = tabuOrderArray.remove(0);
+                tabuSet.remove(deleteTabu);
+            }
             neighbourSet = generateNeighbours(currentBoard);
             currentBoard = findBestNeighbour(neighbourSet);
             tabuSet.add(currentBoard);
+            tabuOrderArray.add(currentBoard);
 
             currentTime = System.currentTimeMillis();
         }
 
     }
 
-    // OPTIMISE!!
     private HashSet<ArrayList<Integer>> generateNeighbours(ArrayList<Integer> array){
+        int counter = 0;
         ArrayList<Integer> newNeighbour;
         HashSet<ArrayList<Integer>> newNeighbourSet = new HashSet<>();
         for (int i = 0; i < array.size(); i++) {
-            for (int j = 0; j < array.size(); j++) {
+            for (int j = i+1; j < array.size(); j++) {
                 newNeighbour = new ArrayList<>(array);
+//                System.out.println("i=" + i + " j=" + j);
+//                printArray(newNeighbour);
                 swapColumns(newNeighbour,i,j);
+//                printArray(newNeighbour);
+//                System.out.println();
                 newNeighbourSet.add(newNeighbour);
-
             }
         }
+//        System.out.println(counter);
         newNeighbourSet.remove(array);
         newNeighbourSet.removeAll(tabuSet);
         return newNeighbourSet;
@@ -96,18 +108,23 @@ public class TabuSearch {
         ArrayList<Integer> bestNeighbour = new ArrayList<>();
         int bestFitness = Integer.MAX_VALUE;
         int currentFitness;
-        for (ArrayList<Integer> newNeighbour :
-                set) {
+        for (ArrayList<Integer> newNeighbour : set) {
             currentFitness = calculateFitness2(newNeighbour);
-            if(currentFitness == 0){
-                //System.out.println("solution found!!");
-                solutionSet.add(newNeighbour);
+            if(currentFitness <= eliteThreshold){
+                if(currentFitness == 0){
+                    //System.out.println("solution found!!");
+                    solutionSet.add(newNeighbour);
+                }
+                eliteArray.add(newNeighbour);
             }
             if(currentFitness < bestFitness){
                 bestFitness = currentFitness;
-                bestNeighbour = new ArrayList<Integer>(newNeighbour);
-
+                bestNeighbour = new ArrayList<>(newNeighbour);
             }
+        }
+        if (bestFitness > eliteThreshold && eliteArray.size() > 0) {
+//            System.out.println("DID IT!!!");
+            bestNeighbour = eliteArray.remove(0);
         }
         return bestNeighbour;
     }
@@ -207,7 +224,7 @@ public class TabuSearch {
         long endTime = System.currentTimeMillis();
         double executionTime = endTime - startTime;
         System.out.println("n = " + ts.n);
-        System.out.println("TabuSet Length: " + ts.tabuSet.size());
+        System.out.println("TabuSet length: " + ts.tabuSet.size());
         System.out.println("Unique solutions found: "+ ts.solutionSet.size());
         System.out.println("Execution time: " + executionTime/1000 + " seconds");
 

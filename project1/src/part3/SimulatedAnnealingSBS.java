@@ -3,7 +3,7 @@ import java.util.*;
 
 
 @SuppressWarnings({"Duplicates", "ConstantConditions"})
-public class SimulatedAnnealing {
+public class SimulatedAnnealingSBS {
 
     private int[] startBoard;
     private int n, solutionsFound, arrayPrintIndexing, maxUniqueSolutions;
@@ -14,7 +14,7 @@ public class SimulatedAnnealing {
     private boolean input;
 
     // usually finds all solutions for up to n=10 with temp = 20000000, cooling = 0.0000005
-    private SimulatedAnnealing(){
+    private SimulatedAnnealingSBS(){
 
         // ---- SETTINGS ---------------------------------
         this.input = true;
@@ -52,15 +52,19 @@ public class SimulatedAnnealing {
     private void runAlgorithm(){
 
         System.out.println("Running simulated annealing...");
-
         int[] currentBoard = startBoard.clone();
+
         int[] swappedBoard = swapColumns(currentBoard);
+        printBoard(swappedBoard);
 
         while(temperature > minTemperature && solutionSet.size() < maxUniqueSolutions){
             int fitness = calculateFitness(currentBoard);
             int newFitness = calculateFitness(swappedBoard);
             if (newFitness == 0 ){
                 String str = arrayToString(swappedBoard);
+                System.out.println("Solution found!");
+                printBoard(swappedBoard);
+
                 solutionSet.add(str);
                 solutionsFound++;
             }
@@ -68,19 +72,34 @@ public class SimulatedAnnealing {
                 currentBoard = swappedBoard;
             }
             this.temperature *= 1-this.cooling;
+            reader.nextLine();
+            System.out.println("------------------------------------\n");
+            System.out.println("Current Board:");
+            printBoard(currentBoard);
             swappedBoard = swapColumns(currentBoard);
+            System.out.println("Swapped board:");
+            printBoard(swappedBoard);
 
         }
     }
 
     private boolean acceptanceFunction(int fitness, int newFitness) {
-        if (fitness > newFitness) return true;
+        System.out.println("Comparing current fitness: "+ fitness + " to new fitness: "+newFitness);
+        if (fitness > newFitness) {
+            System.out.println("New is better! Moving");
+            return true;
+        }
         else {
+            System.out.println("New is not better. Might still move.");
             double rand = random.nextDouble();
-            if ((Math.exp(-((newFitness - fitness)/temperature)) > rand)){
+            double expression = Math.exp(-((newFitness - fitness)/temperature));
+            System.out.println("Moving if "+expression +" > " + rand);
+            if (expression > rand){
+                System.out.println("Moving");
                 return true;
             }
         }
+        System.out.println("Not moving");
         return false;
     }
 
@@ -116,6 +135,7 @@ public class SimulatedAnnealing {
         int temp = newArray[first];
         newArray[first] = newArray[second];
         newArray[second] = temp;
+        System.out.println("Swapping column "+(first+1) + " with " + (second+1));
         return newArray;
     }
 
@@ -175,7 +195,7 @@ public class SimulatedAnnealing {
     }
 
     public static void main(String[] args) {
-        SimulatedAnnealing sa = new SimulatedAnnealing();
+        SimulatedAnnealingSBS sa = new SimulatedAnnealingSBS();
         long startTime = System.currentTimeMillis();
         sa.runAlgorithm();
         long endTime = System.currentTimeMillis();

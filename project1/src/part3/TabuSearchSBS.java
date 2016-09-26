@@ -4,21 +4,18 @@ import java.util.*;
 
 
 @SuppressWarnings("Duplicates")
-public class TabuSearch {
+public class TabuSearchSBS {
     private ArrayList<Integer> startBoard;
     private ArrayList<ArrayList<Integer>> eliteArray;
-    private int n, arrayPrintIndexing,runTime, tenure, eliteThreshold;
+    private int n, arrayPrintIndexing, tenure, eliteThreshold;
     private Random random;
     private HashSet<ArrayList<Integer>> solutionSet,tabuSet,neighbourSet;
     private Scanner reader;
-    private boolean input;
 
-    private TabuSearch(){
+    private TabuSearchSBS(){
 
         // ---- SETTINGS ---------------------------------
-        this.input = true;
         this.n = 12; // Number of neighbours = (n(n-1))/2
-        this.runTime = 10;
         this.tenure = Integer.MAX_VALUE;
         this.eliteThreshold = 0;
         this.arrayPrintIndexing = 1;
@@ -32,25 +29,18 @@ public class TabuSearch {
         reader = new Scanner(System.in);
         this.startBoard = new ArrayList<>();
         random = new Random();
-        if (input) {
-            System.out.print("n = ");
-            this.n = reader.nextInt();
-            reader.nextLine();
-            System.out.print("Initial queen positions:");
-            String initialBoardString = reader.nextLine();
-            if (initialBoardString.length()>0) {
-                startBoard = processInput(initialBoardString);
-            }
-            else generateStartBoard();
-            System.out.println();
+
+        System.out.print("n = ");
+        this.n = reader.nextInt();
+        reader.nextLine();
+        System.out.print("Initial queen positions:");
+        String initialBoardString = reader.nextLine();
+        if (initialBoardString.length()>0) {
+            startBoard = processInput(initialBoardString);
         }
-        else {
-            generateStartBoard();
-            System.out.println();
-            System.out.println("n = " + n);
-            System.out.println();
-            System.out.print("Initial queen positions:");
-        }
+        else generateStartBoard();
+        System.out.println();
+
         printBoard(startBoard);
 
         sortRowCollisions(startBoard);
@@ -60,11 +50,10 @@ public class TabuSearch {
     }
 
     private void runAlgorithm(){
+        System.out.println("-----------------------------------------");
         ArrayList<Integer> currentBoard = this.startBoard;
         ArrayList<ArrayList<Integer>> tabuQueue = new ArrayList<>();
-        long startTime = System.currentTimeMillis();
-        long currentTime = System.currentTimeMillis();
-        while(currentTime - startTime < runTime*1000){
+        while(true){
 
             if (tabuQueue.size() == tenure) {
                 ArrayList<Integer> deleteTabu = tabuQueue.remove(0);
@@ -74,12 +63,13 @@ public class TabuSearch {
             currentBoard = findBestNeighbour(neighbourSet);
             tabuSet.add(currentBoard);
             tabuQueue.add(currentBoard);
-
-            currentTime = System.currentTimeMillis();
+            System.out.println("-----------------------------------------");
+            reader.nextLine();
         }
     }
 
     private HashSet<ArrayList<Integer>> generateNeighbours(ArrayList<Integer> array){
+        System.out.println("Generating neighbours");
         ArrayList<Integer> newNeighbour;
         HashSet<ArrayList<Integer>> newNeighbourSet = new HashSet<>();
         for (int i = 0; i < array.size(); i++) {
@@ -87,10 +77,16 @@ public class TabuSearch {
                 newNeighbour = new ArrayList<>(array);
                 swapColumns(newNeighbour,i,j);
                 newNeighbourSet.add(newNeighbour);
+                printArray(newNeighbour);
             }
         }
         newNeighbourSet.remove(array);
+        System.out.println("\nTabu set:");
+        printHashSet(tabuSet);
+        System.out.println("\nRemoving neighbours in tabu set");
         newNeighbourSet.removeAll(tabuSet);
+        System.out.println("\nRemaining neighbours:");
+        printHashSet(newNeighbourSet);
         return newNeighbourSet;
     }
     private ArrayList<Integer> findBestNeighbour(HashSet<ArrayList<Integer>> set){
@@ -102,6 +98,8 @@ public class TabuSearch {
             if(currentCost <= eliteThreshold){
                 if(currentCost == 0){
                     solutionSet.add(newNeighbour);
+                    System.out.println("Solution found!");
+                    printBoard(newNeighbour);
                 }
                 eliteArray.add(newNeighbour);
             }
@@ -112,7 +110,11 @@ public class TabuSearch {
         }
         if (bestCost > eliteThreshold && eliteArray.size() > 0) {
             bestNeighbour = eliteArray.remove(0);
+            System.out.println("\nNo satisfactory neighbour found. Jumping to solution from eliteSet:");
         }
+        else System.out.println("\nBest neighbour:");
+        printArray(bestNeighbour);
+        System.out.println("Adding to tabu set");
         return bestNeighbour;
     }
 
@@ -196,7 +198,7 @@ public class TabuSearch {
     }
 
     public static void main(String[] args) {
-        TabuSearch ts = new TabuSearch();
+        TabuSearchSBS ts = new TabuSearchSBS();
         long startTime = System.currentTimeMillis();
         ts.runAlgorithm();
         long endTime = System.currentTimeMillis();

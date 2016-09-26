@@ -3,7 +3,7 @@ import java.util.*;
 
 
 @SuppressWarnings({"Duplicates", "FieldCanBeLocal", "PointlessBooleanExpression"})
-public class GeneticAlgorithm {
+public class GeneticAlgorithmSBS {
 
     private boolean input;
     private Random random;
@@ -15,10 +15,10 @@ public class GeneticAlgorithm {
     private String endCondition;
 
 
-    private GeneticAlgorithm() {
+    private GeneticAlgorithmSBS() {
 
         // ---- SETTINGS ---------------------------------
-        this.input = false;
+        this.input = true;
         this.n = 30;
         this.numOfMutations = 1; // mutation rate = (2*numOfMutations) / n
         this.arrayPrintIndexing = 1;
@@ -373,7 +373,7 @@ public class GeneticAlgorithm {
     }
 
     public static void main(String[] args) {
-        GeneticAlgorithm ga = new GeneticAlgorithm();
+        GeneticAlgorithmSBS ga = new GeneticAlgorithmSBS();
         long startTime = System.currentTimeMillis();
         ga.runAlgorithm();
         long endTime = System.currentTimeMillis();

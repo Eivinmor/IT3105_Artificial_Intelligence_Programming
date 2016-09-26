@@ -24,7 +24,7 @@ public class SimulatedAnnealingSBS {
         this.arrayPrintIndexing = 1;
         this.minTemperature = 0.00000005; // 0.000000005;
         this.maxUniqueSolutions = Integer.MAX_VALUE;
-        // default settings gives 40% chance to jump to 1 less fitness
+        // default settings gives 40% chance to jump to 1 more cost
         // -----------------------------------------------
 
         solutionsFound = 0;
@@ -50,25 +50,20 @@ public class SimulatedAnnealingSBS {
     }
 
     private void runAlgorithm(){
-
         System.out.println("Running simulated annealing...");
         int[] currentBoard = startBoard.clone();
+        if (calculateCost(currentBoard) == 0) addSolution(currentBoard);
 
         int[] swappedBoard = swapColumns(currentBoard);
         printBoard(swappedBoard);
 
         while(temperature > minTemperature && solutionSet.size() < maxUniqueSolutions){
-            int fitness = calculateFitness(currentBoard);
-            int newFitness = calculateFitness(swappedBoard);
-            if (newFitness == 0 ){
-                String str = arrayToString(swappedBoard);
-                System.out.println("Solution found!");
-                printBoard(swappedBoard);
-
-                solutionSet.add(str);
-                solutionsFound++;
+            int cost = calculateCost(currentBoard);
+            int newCost = calculateCost(swappedBoard);
+            if (newCost == 0 ){
+                addSolution(swappedBoard);
             }
-            if (acceptanceFunction(fitness, newFitness)){
+            if (acceptanceFunction(cost, newCost)){
                 currentBoard = swappedBoard;
             }
             this.temperature *= 1-this.cooling;
@@ -83,16 +78,24 @@ public class SimulatedAnnealingSBS {
         }
     }
 
-    private boolean acceptanceFunction(int fitness, int newFitness) {
-        System.out.println("Comparing current fitness: "+ fitness + " to new fitness: "+newFitness);
-        if (fitness > newFitness) {
+    private void addSolution(int[]board) {
+        String str = arrayToString(board);
+        System.out.println("Solution found!");
+        printBoard(board);
+        solutionSet.add(str);
+        solutionsFound++;
+    }
+
+    private boolean acceptanceFunction(int cost, int newCost) {
+        System.out.println("Comparing current cost: "+ cost + " to new cost: "+newCost);
+        if (cost > newCost) {
             System.out.println("New is better! Moving");
             return true;
         }
         else {
             System.out.println("New is not better. Might still move.");
             double rand = random.nextDouble();
-            double expression = Math.exp(-((newFitness - fitness)/temperature));
+            double expression = Math.exp(-((newCost - cost)/temperature));
             System.out.println("Moving if "+expression +" > " + rand);
             if (expression > rand){
                 System.out.println("Moving");
@@ -103,10 +106,10 @@ public class SimulatedAnnealingSBS {
         return false;
     }
 
-    //finds the fitness based on how many queens are currently attacking each other.
+    //finds the cost based on how many queens are currently attacking each other.
     //downside: the way it is not 3 queens all attacking each other is not that much worse than 2
-    private int calculateFitness(int[] array){
-        int fitness = 0;
+    private int calculateCost(int[] array){
+        int cost = 0;
         int downRight[] = new int[2*this.n-1];
         int upRight[] = new int[2*this.n-1];
 
@@ -118,11 +121,11 @@ public class SimulatedAnnealingSBS {
         }
         //adds 1 to cost if queens are attacking each other
         for (int i = 0; i < downRight.length; i++) {
-            if (downRight[i] > 0) fitness += downRight[i] - 1;
-            if (upRight[i] > 0) fitness += upRight[i] - 1;
+            if (downRight[i] > 0) cost += downRight[i] - 1;
+            if (upRight[i] > 0) cost += upRight[i] - 1;
         }
 
-        return fitness;
+        return cost;
     }
 
     private int[] swapColumns(int[] oldArray){

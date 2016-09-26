@@ -14,7 +14,7 @@ public class RecursiveBacktracker {
     private RecursiveBacktracker() {
 
         // ---- SETTINGS ---------------------------------
-        stepByStep = false;
+        stepByStep = true;
         solutionsToConsole = false;
         // -----------------------------------------------
 

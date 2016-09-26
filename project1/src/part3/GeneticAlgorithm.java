@@ -18,13 +18,13 @@ public class GeneticAlgorithm {
 
         // ---- SETTINGS ---------------------------------
         this.input = false;
-        this.n = 20;
+        this.n = 12;
         this.numOfMutations = 1;
         this.arrayPrintIndexing = 1;
-        this.runTime = 20;
-        this.maxSolutions = 100000;
+        this.runTime = 30;
+        this.maxSolutions = 10000;
         this.maxGenerations = 100000;
-        this.endCondition = "solutions";
+        this.endCondition = "solutions"; //runTime, solutions, generations
         // -----------------------------------------------
         reader = new Scanner(System.in);
         this.startBoard = new int[n];

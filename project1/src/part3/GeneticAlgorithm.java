@@ -7,21 +7,24 @@ public class GeneticAlgorithm {
 
     private boolean input;
     private Random random;
-    private int n, popSize,numOfMutations,solutionsFound, runTime, arrayPrintIndexing;
+    private int n, popSize,numOfMutations,solutionsFound, runTime, arrayPrintIndexing, maxGenerations, maxSolutions;
     private int[] startBoard, parents;
     private Scanner reader;
     private int[][] populationArray,parents2;
     private HashSet<String> solutionSet;
+    private String endCondition;
 
     private GeneticAlgorithm(){
 
         // ---- SETTINGS ---------------------------------
         this.input = false;
-        this.n = 15;
+        this.n = 20;
         this.numOfMutations = 1;
-        this.runTime = 30;
         this.arrayPrintIndexing = 1;
-
+        this.runTime = 20;
+        this.maxSolutions = 100000;
+        this.maxGenerations = 100000;
+        this.endCondition = "solutions";
         // -----------------------------------------------
         reader = new Scanner(System.in);
         this.startBoard = new int[n];
@@ -37,7 +40,7 @@ public class GeneticAlgorithm {
             }
         }
 
-        this.popSize = 3; //5*n;
+        this.popSize = 5*n; //5*n;
         this.solutionsFound = 0;
         this.solutionSet = new HashSet<>();
         this.random = new Random();
@@ -54,25 +57,29 @@ public class GeneticAlgorithm {
     private void runAlgorithm() {
         long startTime = System.currentTimeMillis();
         long currentTime = System.currentTimeMillis();
-        while(currentTime - startTime < runTime*1000){
-//        while(solutionSet.size() < 100){
-//            parents = selectParents();
-//            breed(populationArray[parents[0]], populationArray[parents[1]]);
 
-
-            parents2 = selectParents2(populationArray);
-
-//            for (int i = 0; i < parents2.length; i++) {
-//                printArray(parents2[i]);
-//            }
-
-            breed2();
-
-
-
-
-            currentTime = System.currentTimeMillis();
+        if (endCondition.equals("runTime")) {
+            while(currentTime - startTime < runTime*1000){
+                parents = selectParents();
+                populationArray = breed(populationArray[parents[0]], populationArray[parents[1]]);
+                currentTime = System.currentTimeMillis();
+            }
         }
+        else if (endCondition.equals("solutions")){
+            while(solutionSet.size() < maxSolutions){
+                parents = selectParents();
+                populationArray = breed(populationArray[parents[0]], populationArray[parents[1]]);
+            }
+        }
+        else if (endCondition.equals("generations")){
+            int generation = 0;
+            while (generation < maxGenerations) {
+                parents = selectParents();
+                populationArray = breed(populationArray[parents[0]], populationArray[parents[1]]);
+                generation++;
+            }
+        }
+
 
     }
 
@@ -84,8 +91,6 @@ public class GeneticAlgorithm {
         for (int i = 0; i < popSize; i++){
             parentFitnessArray[i] = calculateFitness2(populationArray[i]);
         }
-//        printArray(parentFitnessArray);
-
         for (int i = 0; i < bestParentIndex.length; i++) {
             for (int j = 0; j < parentFitnessArray.length; j++) {
                 if(parentFitnessArray[j] < currentBest){
@@ -96,12 +101,6 @@ public class GeneticAlgorithm {
             parentFitnessArray[bestParentIndex[i]] = 4*n;
             currentBest = 4*n;
         }
-
-        //check
-//        for (int i = 0; i < bestParentIndex.length; i++) {
-//            System.out.println(calculateFitness(populationArray[bestParentIndex[i]]));
-//        }
-
         return bestParentIndex;
     }
 
@@ -154,77 +153,50 @@ public class GeneticAlgorithm {
         return parentCouplesArray;
     }
 
-    private void breed(int[] first, int[] second){
-
-//        System.out.println("Breeding First");
-//        printArray(first);
-//        printBoard(first);
-//        System.out.println("Second");
-//        printArray(second);
-//        printBoard(second);
-
-//        System.out.println("Initial population");
-//        printPopulation(populationArray);
-
-
+    private int[][] breed(int[] first, int[] second){
+        int[][] newPopulationArray = new int[popSize][n];
         for (int i = 0; i < popSize; i++) {
-
-            int[] child = new int[n];
-            for (int j = 0; j < this.n; j++) {
-                if (j <= (n-1)/2) child[j] = first[j];
-
-                else child[j] = second[j];
-            }
-//            System.out.println("Child");
-//            printArray(child);
-//            printBoard(child);
-
+//            int[] child = singlePointCrossover(first, second, 0.5);
+            int[] child = singlePointCrossover(first, second, random.nextDouble());
+//            int[] child = first.clone();
             sortRows(child);
-
-//            System.out.println("Sorted Child");
-//            printArray(child);
-//            printBoard(child);
-
             child = mutate(child);
-
-//            printArray(child);
-//            printBoard(child);
-
-            populationArray[i] = child;
+            newPopulationArray[i] = child;
         }
-
-//        System.out.println("neww population");
-//        printPopulation(populationArray);
-
+        return newPopulationArray;
     }
+
     private void breed2(){
 
-
-
         for (int i = 0; i < popSize; i++) {
-
             int[] child = new int[n];
-
-            //optimise!!! use two for loops or copy first, insert second.
+//
+//            //optimise!!! use two for loops or copy first, insert second.
             for (int j = 0; j < this.n; j++) {
                 if (j <= (n-1)/2) child[j] = populationArray[parents2[i][0]][j];
 
                 else child[j] = populationArray[parents2[i][0]][j];
             }
-//            System.out.println("child");
-//            printArray(child);
             sortRows(child);
-
             child = mutate(child);
-
             populationArray[i] = child;
         }
-
-//        System.out.println("neww population");
-//        printPopulation(populationArray);
-
     }
 
+     private int[] singlePointCrossover (int[] first, int[] second, double crossPointPercent) {
+        int[] child = new int[n];
+
+        int i = 0;
+        while (i < crossPointPercent*n) {
+            child[i] = first[i];
+            i++;
+        }
+        while (i < n) {
+            child[i] = second[i];
+            i++;
+        }
+        return child;
+    }
 
     private int[][] generatePopulation(){
         int[][] newPopulationArray = new int[popSize][n];
@@ -272,8 +244,6 @@ public class GeneticAlgorithm {
         }
     }
 
-
-
     private int calculateFitnessWithRows(int[] array){
         int cost= 0;
         int downRight[] = new int[2*this.n-1];
@@ -309,7 +279,7 @@ public class GeneticAlgorithm {
     }
 
     private int calculateFitness2(int[] array){
-        int cost = 0;
+        int fitness = 0;
         int downRight[] = new int[2*this.n-1];
         int upRight[] = new int[2*this.n-1];
         //finds queen and increment its row and diagonal values.
@@ -320,11 +290,11 @@ public class GeneticAlgorithm {
 
         //adds 1 to cost if queens are attacking each other
         for (int i = 0; i < downRight.length; i++) {
-            if (downRight[i] > 0) cost += downRight[i] - 1;
-            if (upRight[i] > 0) cost += upRight[i] - 1;
+            if (downRight[i] > 0) fitness += downRight[i] - 1;
+            if (upRight[i] > 0) fitness += upRight[i] - 1;
         }
         // System.out.println("cost: "+cost);
-        if(cost == 0){
+        if(fitness == 0){
 //            if(!solutionSet.contains(arrayToString(array))) {
 //                System.out.println("Solution found!!!");
 //                printArray(array);
@@ -333,7 +303,7 @@ public class GeneticAlgorithm {
             solutionSet.add(arrayToString(array));
             solutionsFound++;
         }
-        return cost;
+        return fitness;
     }
 
     private void printBoard(int[] array) {
@@ -388,7 +358,6 @@ public class GeneticAlgorithm {
         System.out.println("\nSolutions found: "+ ga.solutionsFound);
         System.out.println("Unique solutions found: "+ ga.solutionSet.size());
         System.out.println("Execution time: " + executionTime/1000 + " seconds");
-
     }
 
 //    public static void main(String[] args) {

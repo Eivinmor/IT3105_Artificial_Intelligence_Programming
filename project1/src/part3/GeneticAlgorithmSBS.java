@@ -5,44 +5,35 @@ import java.util.*;
 @SuppressWarnings({"Duplicates", "FieldCanBeLocal", "PointlessBooleanExpression"})
 public class GeneticAlgorithmSBS {
 
-    private boolean input;
     private Random random;
-    private int n, popSize, numOfMutations, solutionsFound, runTime, arrayPrintIndexing, maxGenerations, maxSolutions, numOfParents;
+    private int n, popSize, numOfMutations, solutionsFound, arrayPrintIndexing, numOfParents;
     private int[] startBoard, parents;
     private Scanner reader;
     private int[][] populationArray, parents2;
     private HashSet<String> solutionSet;
-    private String endCondition;
 
 
     private GeneticAlgorithmSBS() {
 
         // ---- SETTINGS ---------------------------------
-        this.input = true;
         this.n = 30;
         this.numOfMutations = 1; // mutation rate = (2*numOfMutations) / n
         this.arrayPrintIndexing = 1;
-        this.runTime = 10;
-        this.maxSolutions = 10000;
-        this.maxGenerations = 100000;
         this.numOfParents = 10; //crossover rate = numOfParents / popSize
-        this.endCondition = "runTime"; //runTime, solutions, generations
         // -----------------------------------------------
         reader = new Scanner(System.in);
         this.startBoard = new int[n];
 
-        if (input) {
-            System.out.print("n = ");
-            this.n = reader.nextInt();
-            reader.nextLine();
-            System.out.print("input = ");
-            String initialBoardString = reader.nextLine();
-            if (initialBoardString.length() > 0) {
-                this.startBoard = processInput(initialBoardString);
-            }
+        System.out.print("n = ");
+        this.n = reader.nextInt();
+        reader.nextLine();
+        System.out.print("input = ");
+        String initialBoardString = reader.nextLine();
+        if (initialBoardString.length() > 0) {
+            this.startBoard = processInput(initialBoardString);
         }
 
-        this.popSize = 5 * n; //5*n;
+        this.popSize = 5; //5*n;
         this.solutionsFound = 0;
         this.solutionSet = new HashSet<>();
         this.random = new Random();
@@ -51,7 +42,7 @@ public class GeneticAlgorithmSBS {
         System.out.println("Initial board:");
         printBoard(startBoard);
         sortRows(startBoard);
-        System.out.println("\nSorted initial board:");
+        System.out.println("\nSorted row collisions in initial board:");
         printBoard(startBoard);
         populationArray = generatePopulation();
     }
@@ -60,68 +51,66 @@ public class GeneticAlgorithmSBS {
         long startTime = System.currentTimeMillis();
         long currentTime = System.currentTimeMillis();
 
-        if (endCondition.equals("runTime")) {
-            while (currentTime - startTime < runTime * 1000) {
-                parents = selectTwoParents();
-                populationArray = breed(populationArray[parents[0]], populationArray[parents[1]]);
-
+        while (true) {
+            System.out.println("--------------------------------------------");
+            System.out.println();
+            parents = selectTwoParents();
+            reader.nextLine();
+            populationArray = breed(populationArray[parents[0]], populationArray[parents[1]]);
+            reader.nextLine();
+            System.out.println("\nNew population:");
+            printPopulation(populationArray);
 
 //                parents = selectMultipleParents(numOfParents);
 //                populationArray = breedMultiple(parents);
-                currentTime = System.currentTimeMillis();
-            }
-        } else if (endCondition.equals("solutions")) {
-            while (solutionSet.size() < maxSolutions) {
-                parents = selectTwoParents();
-                populationArray = breed(populationArray[parents[0]], populationArray[parents[1]]);
-            }
-        } else if (endCondition.equals("generations")) {
-            int generation = 0;
-            while (generation < maxGenerations) {
-                parents = selectTwoParents();
-                populationArray = breed(populationArray[parents[0]], populationArray[parents[1]]);
-                generation++;
-            }
+            currentTime = System.currentTimeMillis();
+            reader.nextLine();
+
         }
+
     }
 
     private int[] selectTwoParents() {
-        int[] parentFitnessArray = new int[popSize];
+        int[] parentCostArray = new int[popSize];
         int[] bestParentIndex = new int[2];
         int currentBest = 4 * this.n;
 
+        System.out.println("Evaluating population and selecting parents:");
         for (int i = 0; i < popSize; i++) {
-            parentFitnessArray[i] = calculateFitness2(populationArray[i]);
+            parentCostArray[i] = calculateCost2(populationArray[i]);
         }
         for (int i = 0; i < bestParentIndex.length; i++) {
-            for (int j = 0; j < parentFitnessArray.length; j++) {
-                if (parentFitnessArray[j] < currentBest) {
-                    currentBest = parentFitnessArray[j];
+            for (int j = 0; j < parentCostArray.length; j++) {
+                if (parentCostArray[j] < currentBest) {
+                    currentBest = parentCostArray[j];
                     bestParentIndex[i] = j;
                 }
             }
-            parentFitnessArray[bestParentIndex[i]] = 4 * n;
+            parentCostArray[bestParentIndex[i]] = 4 * n;
             currentBest = 4 * n;
         }
+        System.out.println("\nChosen parents:");
+        printArray(populationArray[bestParentIndex[0]]);
+        printArray(populationArray[bestParentIndex[1]]);
         return bestParentIndex;
     }
 
     private int[] selectMultipleParents(int numberOfParents) {
-        int[] parentFitnessArray = new int[popSize];
+        int[] parentCostArray = new int[popSize];
         int[] bestParentIndex = new int[numberOfParents];
         int currentBest = 4 * this.n;
 
         for (int i = 0; i < popSize; i++) {
-            parentFitnessArray[i] = calculateFitness2(populationArray[i]);
+            parentCostArray[i] = calculateCost2(populationArray[i]);
         }
         for (int i = 0; i < bestParentIndex.length; i++) {
-            for (int j = 0; j < parentFitnessArray.length; j++) {
-                if (parentFitnessArray[j] < currentBest) {
-                    currentBest = parentFitnessArray[j];
+            for (int j = 0; j < parentCostArray.length; j++) {
+                if (parentCostArray[j] < currentBest) {
+                    currentBest = parentCostArray[j];
                     bestParentIndex[i] = j;
                 }
             }
-            parentFitnessArray[bestParentIndex[i]] = 4 * n;
+            parentCostArray[bestParentIndex[i]] = 4 * n;
             currentBest = 4 * n;
         }
         // printArray(bestParentIndex);
@@ -129,32 +118,32 @@ public class GeneticAlgorithmSBS {
     }
 
     private int[][] selectParents2(int[][] populationArray) {
-        int[] parentFitnessArray = new int[popSize];
+        int[] parentCostArray = new int[popSize];
         int[][] parentCouplesArray = new int[popSize][2];
-        int parentFitness;
-        int totalFitness = 0;
+        int parentCost;
+        int totalCost = 0;
 
         for (int i = 0; i < popSize; i++) {
-            parentFitness = calculateFitness2(populationArray[i]);
-            parentFitnessArray[i] = parentFitness;
-            totalFitness += parentFitness;
+            parentCost = calculateCost2(populationArray[i]);
+            parentCostArray[i] = parentCost;
+            totalCost += parentCost;
         }
-//        printArray(parentFitnessArray);
+//        printArray(parentCostArray);
         for (int i = 0; i < popSize; i++) {
-            parentFitnessArray[i] = totalFitness - parentFitnessArray[i];
+            parentCostArray[i] = totalCost - parentCostArray[i];
         }
-        totalFitness = 0;
+        totalCost = 0;
         for (int i = 0; i < popSize; i++) {
-            totalFitness += parentFitnessArray[i];
+            totalCost += parentCostArray[i];
         }
 
         double parentPointer;
         for (int j = 0; j < popSize; j++) {
-            parentPointer = random.nextDouble() * totalFitness;
+            parentPointer = random.nextDouble() * totalCost;
             for (int i = 0; i < popSize; i++) {
 
-                //            System.out.println("TotalFitness = " + totalFitness + " InitFitness = " + parentFitnessArray[i] + "ParentPointer = " + parentPointer);
-                parentPointer -= (parentFitnessArray[i]);
+                //            System.out.println("TotalCost = " + totalCost + " InitCost = " + parentCostArray[i] + "ParentPointer = " + parentPointer);
+                parentPointer -= (parentCostArray[i]);
                 if (parentPointer < 0.0) {
                     parentCouplesArray[j][0] = i;
                     break;
@@ -162,9 +151,9 @@ public class GeneticAlgorithmSBS {
             }
             parentCouplesArray[j][1] = parentCouplesArray[j][0];
             while (parentCouplesArray[j][0] == parentCouplesArray[j][1]) {
-                parentPointer = random.nextDouble() * totalFitness;
+                parentPointer = random.nextDouble() * totalCost;
                 for (int i = 0; i < popSize; i++) {
-                    parentPointer -= (parentFitnessArray[i]);
+                    parentPointer -= (parentCostArray[i]);
                     if (parentPointer < 0.0) {
                         parentCouplesArray[j][1] = i;
                         break;
@@ -178,6 +167,7 @@ public class GeneticAlgorithmSBS {
     }
 
     private int[][] breed(int[] first, int[] second) {
+        System.out.println("\n_____Breeding parents and mutating______");
         int[][] newPopulationArray = new int[popSize][n];
         for (int i = 0; i < popSize; i++) {
 //            int[] child = singlePointCrossover(first, second, 0.5);
@@ -187,6 +177,7 @@ public class GeneticAlgorithmSBS {
             child = mutate(child);
             newPopulationArray[i] = child;
         }
+        System.out.println("________________________________________");
         return newPopulationArray;
     }
 
@@ -229,6 +220,7 @@ public class GeneticAlgorithmSBS {
     }
 
     private int[] singlePointCrossover(int[] first, int[] second, double crossPointPercent) {
+        System.out.println("\nPerforming single point crossover with " + ((int)(crossPointPercent*n)) + " as cross point:");
         int[] child = new int[n];
         int i = 0;
         while (i < crossPointPercent * n) {
@@ -239,23 +231,30 @@ public class GeneticAlgorithmSBS {
             child[i] = second[i];
             i++;
         }
+        printArray(child);
         return child;
     }
 
     private int[][] generatePopulation() {
+        System.out.println("Generating population:");
         int[][] newPopulationArray = new int[popSize][n];
         for (int i = 0; i < popSize; i++) {
             newPopulationArray[i] = mutate(startBoard);
+            System.out.println("Cost: "+calculateCostMute(newPopulationArray[i]));
+            System.out.println();
         }
         System.out.println();
         return newPopulationArray;
     }
 
     private int[] mutate(int[] oldArray) {
+        System.out.print("Mutating: ");
         int[] array = oldArray.clone();
         for (int i = 0; i < this.numOfMutations; i++) {
             swapColumns(array);
         }
+        System.out.println();
+        printArray(array);
         return array;
     }
 
@@ -268,6 +267,7 @@ public class GeneticAlgorithmSBS {
         int temp = array[first];
         array[first] = array[second];
         array[second] = temp;
+        System.out.print("swapping column " + first + " and " + second + ", ");
     }
 
     private void sortRows(int[] array) {
@@ -285,7 +285,7 @@ public class GeneticAlgorithmSBS {
         }
     }
 
-    private int calculateFitnessWithRows(int[] array) {
+    private int calculateCostWithRows(int[] array) {
         int cost = 0;
         int downRight[] = new int[2 * this.n - 1];
         int upRight[] = new int[2 * this.n - 1];
@@ -311,8 +311,8 @@ public class GeneticAlgorithmSBS {
         return cost;
     }
 
-    private int calculateFitness2(int[] array) {
-        int fitness = 0;
+    private int calculateCost2(int[] array) {
+        int cost = 0;
         int downRight[] = new int[2 * this.n - 1];
         int upRight[] = new int[2 * this.n - 1];
         //finds queen and increment its row and diagonal values.
@@ -322,14 +322,34 @@ public class GeneticAlgorithmSBS {
         }
         //adds 1 to cost if queens are attacking each other
         for (int i = 0; i < downRight.length; i++) {
-            if (downRight[i] > 0) fitness += downRight[i] - 1;
-            if (upRight[i] > 0) fitness += upRight[i] - 1;
+            if (downRight[i] > 0) cost += downRight[i] - 1;
+            if (upRight[i] > 0) cost += upRight[i] - 1;
         }
-        if (fitness == 0) {
+        if (cost == 0) {
             solutionSet.add(arrayToString(array));
             solutionsFound++;
+            System.out.print("!!! Solution found: ");
+            printArray(array);
+
         }
-        return fitness;
+        return cost;
+    }
+
+    private int calculateCostMute(int[] array) {
+        int cost = 0;
+        int downRight[] = new int[2 * this.n - 1];
+        int upRight[] = new int[2 * this.n - 1];
+        //finds queen and increment its row and diagonal values.
+        for (int x = 0; x < array.length; x++) {
+            downRight[array[x] + x]++;
+            upRight[x - array[x] + this.n - 1]++;
+        }
+        //adds 1 to cost if queens are attacking each other
+        for (int i = 0; i < downRight.length; i++) {
+            if (downRight[i] > 0) cost += downRight[i] - 1;
+            if (upRight[i] > 0) cost += upRight[i] - 1;
+        }
+        return cost;
     }
 
     private void printBoard(int[] array) {
@@ -354,7 +374,9 @@ public class GeneticAlgorithmSBS {
     private void printPopulation(int[][] array) {
         for (int i = 0; i < array.length; i++) {
             printArray(array[i]);
-            printBoard(array[i]);
+            System.out.println("Cost: " + calculateCostMute(array[i]));
+            System.out.println();
+
         }
     }
 

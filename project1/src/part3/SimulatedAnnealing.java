@@ -22,7 +22,7 @@ public class SimulatedAnnealing {
         this.temperature = 1; // 1
         this.cooling = 0.0000005; // 0.0000005
         this.arrayPrintIndexing = 1;
-        this.minTemperature = 0.00000005; // 0.000000005;
+        this.minTemperature = 0.000000005; // 0.000000005;
         this.maxUniqueSolutions = Integer.MAX_VALUE;
         // default settings gives 40% chance to jump to 1 less cost
         // -----------------------------------------------
@@ -54,7 +54,7 @@ public class SimulatedAnnealing {
 
         int[] currentBoard = startBoard.clone();
         if (calculateCost(currentBoard) == 0) addSolution(currentBoard);
-        
+
         int[] swappedBoard = swapColumns(currentBoard);
 
         while(temperature > minTemperature && solutionSet.size() < maxUniqueSolutions){

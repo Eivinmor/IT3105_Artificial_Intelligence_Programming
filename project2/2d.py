@@ -30,7 +30,6 @@ def run_algorithm(env, q_function):
     print("Timestep:", c)
     print_state(x, y, env)
 
-
     while not done and c < 100:
         c += 1
         discount *= 0.99

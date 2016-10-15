@@ -9,7 +9,7 @@ direction = ['W', 'S', 'E', 'N']
 
 max_episodes = 10000
 epsilon = 0.1
-epsilon_decay = 1  # 0.99999 for best results
+epsilon_decay = 0.99999  # 0.99999 for best results
 discount = 0.99
 learning_rate = 0.1
 
@@ -25,7 +25,7 @@ def run_algorithm(env, q_dict):
         action = get_epsilon_greedy_action(q_dict[observation])
         prev_observation = observation
         observation, reward, done, info = env.step(action)
-        set_q_value(prev_observation, observation, action, reward, q_dict)
+        set_q_value(prev_observation, observation, action, reward, q_dict, action)
         epsilon *= epsilon_decay
     return reward
 
@@ -50,8 +50,8 @@ def get_epsilon_greedy_action(q_values):
     return random_action
 
 
-def set_q_value(prev_observation, observation, direction, reward, q_dict):
-    q_dict[prev_observation][direction] += learning_rate*(reward + discount*(max(q_dict[observation])) - q_dict[prev_observation][direction])
+def set_q_value(prev_observation, observation, direction, reward, q_dict, action):
+    q_dict[prev_observation][direction] += learning_rate*(reward + discount*q_dict[observation][action] - q_dict[prev_observation][direction])
     # Q(s_t, a_t) += a[r_t+1 + Y * (max(a) Q(s_t+1, a)) - Q(s_t, a_t)]
 
 

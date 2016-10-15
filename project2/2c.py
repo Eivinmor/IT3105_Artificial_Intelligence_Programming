@@ -1,37 +1,36 @@
 import gym
 import random
 
-LEFT = 0
-DOWN = 1
-RIGHT = 2
-UP = 3
-arrows = ['L', 'D', 'R', 'U']
-eps = 0.2
+# WEST = 0
+# SOUTH = 1
+# EAST = 2
+# NORTH = 3
+direction = ['W', 'S', 'E', 'N']
+epsilon = 0.2
 
 
 def run_algorithm(env, q_function):
-    observation = env.reset()
-    x = observation % 4
-    y = int(observation / 4)
+    env.reset()
     done = False
     c = 1
+    total_reward = 0
 
     print("Timestep:", c)
     print("Initial board state:")
-    print_state(x, y, env)
+    print_env(env)
 
     print("Running algorithm:")
     while not done:
         c += 1
-        action = get_eps_greedy_action(q_function)
+        action = get_epsilon_greedy_action(q_function)
         observation, reward, done, info = env.step(action)
-        x = observation % 4
-        y = int(observation / 4)
+        total_reward += reward
 
         print("Timestep:", c)
-        print_state(x, y, env)
+        print_env(env)
 
     print("Episode finished after {} timesteps".format(c))
+    return total_reward
 
 
 def get_best_action(q_function):
@@ -44,53 +43,30 @@ def get_best_action(q_function):
     return best_action
 
 
-def get_eps_greedy_action(q_function):
+def get_epsilon_greedy_action(q_function):
     random_nr = random.random()
-    print("1-epsilon:", 1-eps)
+    print("1-epsilon:", 1-epsilon)
     print("Random nr:", random_nr)
-    if 1-eps > random_nr:
+    if 1-epsilon > random_nr:
         best_action = get_best_action(q_function)
-        print("Performing best action:", arrows[best_action])
+        print("Performing best action:", direction[best_action])
         return best_action
     random_action = random.randint(0, 3)
-    print("Performing random action:", arrows[random_action])
+    print("Performing random action:", direction[random_action])
     return random_action
 
 
-def generate_random_policy(n):
-    policy = []
-    for y in range(n):
-        policy.append([])
-        for x in range(n):
-            randint = random.randint(0, n-1)
-            policy[y].append(randint)
-    return policy
-
-
-def print_state(x, y, env):
-    print("y:", y, "x:", x)
+def print_env(env):
     env.render()
     print()
 
 
-def print_policy(policy):
-    print("Policy:")
-    for row in policy:
-        for cell in row:
-            print("{:^3}".format(arrows[cell]), end="")
-        print()
-    print()
-
-
-def print_info(info):
-    for key, v in info.items():
-        print("Key:", key, "Value:", v)
-
-
 def main():
-    q_function = [0.5, 1, 0.5, 0.5]
     env = gym.make('FrozenLake-v0')
-    run_algorithm(env, q_function)
+    q_function = [0.5, 1, 0.5, 0.5]
+
+    total_reward = run_algorithm(env, q_function)
+    print("Total reward:", total_reward)
 
 
 main()

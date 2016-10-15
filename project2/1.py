@@ -1,73 +1,50 @@
 import gym
 import random
 
-LEFT = 0
-DOWN = 1
-RIGHT = 2
-UP = 3
-arrows = ['L', 'D', 'R', 'U']
+# WEST = 0
+# SOUTH = 1
+# EAST = 2
+# NORTH = 3
 
 
-def run_algorithm(env, policy):
-    observation = env.reset()
-    x = observation % 4
-    y = int(observation / 4)
+def run_algorithm(env):
+    env.reset()
     done = False
     c = 1
+    total_reward = 0
 
     print("Timestep:", c)
     print("Initial board state:")
-    print_state(x, y, env)
+    print_env(env)
 
     print("Running algorithm:")
     while not done:
         c += 1
-        action = policy[y][x]
+        action = get_random_action(env.action_space.n)
         observation, reward, done, info = env.step(action)
-        x = observation % 4
-        y = int(observation / 4)
+        total_reward += reward
 
         print("Timestep:", c)
-        print_state(x, y, env)
+        print_env(env)
 
     print("Episode finished after {} timesteps".format(c))
+    return total_reward
 
 
-def generate_random_policy(n):
-    policy = []
-    for y in range(n):
-        policy.append([])
-        for x in range(n):
-            randint = random.randint(0, n-1)
-            policy[y].append(randint)
-    return policy
+def get_random_action(n):
+    return random.randint(0, n-1)
 
 
-def print_state(x, y, env):
-    print("y:", y, "x:", x)
+def print_env(env):
     env.render()
     print()
 
 
-def print_policy(policy):
-    print("Policy:")
-    for row in policy:
-        for cell in row:
-            print("{:^3}".format(arrows[cell]), end="")
-        print()
-    print()
-
-
-def print_info(info):
-    for key, v in info.items():
-        print("Key:", key, "Value:", v)
-
-
 def main():
     env = gym.make('FrozenLake-v0')
-    policy = generate_random_policy(4)
-    print_policy(policy)
-    run_algorithm(env, policy)
+    # env = gym.make('Taxi-v1')
+    total_reward = run_algorithm(env)
+    print("Total reward:", total_reward)
 
 
 main()

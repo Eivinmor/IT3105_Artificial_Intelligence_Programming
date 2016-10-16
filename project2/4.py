@@ -9,7 +9,7 @@ direction = ['W', 'S', 'E', 'N']
 
 max_episodes = 10000
 epsilon = 0.1
-epsilon_decay = 0.99999  # 0.99999 for best results
+epsilon_decay = 0.00001  # 0.00001
 discount = 0.99
 learning_rate = 0.1
 
@@ -19,14 +19,15 @@ def run_algorithm(env, q_dict):
     done = False
     c = 1
     global epsilon
-
+    next_action = get_epsilon_greedy_action(q_dict[observation])
     while not done:
         c += 1
-        action = get_epsilon_greedy_action(q_dict[observation])
+        action = next_action
         prev_observation = observation
         observation, reward, done, info = env.step(action)
-        set_q_value(prev_observation, observation, action, reward, q_dict, action)
-        epsilon *= epsilon_decay
+        next_action = get_epsilon_greedy_action(q_dict[observation])
+        set_q_value_sarsa(prev_observation, observation, action, next_action, reward, q_dict)
+        epsilon *= 1-epsilon_decay
     return reward
 
 
@@ -39,20 +40,17 @@ def initiate_q_dict(n):
 
 def get_epsilon_greedy_action(q_values):
     random_nr = random.random()
-    # print("1-epsilon:", 1-eps)
-    # print("Random nr:", random_nr)
     if 1-epsilon > random_nr and max(q_values) != 0:
         best_action = q_values.index(max(q_values))
-        # print("Performing best action:", arrows[best_action])
         return best_action
     random_action = random.randint(0, 3)
-    # print("Performing random action:", arrows[random_action])
     return random_action
 
 
-def set_q_value(prev_observation, observation, direction, reward, q_dict, action):
-    q_dict[prev_observation][direction] += learning_rate*(reward + discount*q_dict[observation][action] - q_dict[prev_observation][direction])
-    # Q(s_t, a_t) += a[r_t+1 + Y * (max(a) Q(s_t+1, a)) - Q(s_t, a_t)]
+def set_q_value_sarsa(state, next_state, action, next_action, reward, q_dict):
+    q_dict[state][action] += \
+        learning_rate*(reward + discount*(q_dict[next_state][next_action]) - q_dict[state][action])
+    # Q(s_t, a_t) += a[r_t+1 + Y * Q(s_t+1, a_t+1) - Q(s_t, a_t)]
 
 
 def print_q_values(q_dict):
@@ -86,7 +84,12 @@ def main():
     while episode < max_episodes:
         total_rewards += run_algorithm(env, q_dict)
         episode += 1
-        print(total_rewards/episode)
+        if episode % 100 == 0:
+            print("{:>5}".format(episode), "\t", "{:<6}".format(total_rewards/100))
+            total_rewards = 0
+        elif episode == 1:
+            print("{:>5}".format(episode), "\t",  "{:<6}".format(total_rewards))
+
     print_q_values(q_dict)
     env.render()
 

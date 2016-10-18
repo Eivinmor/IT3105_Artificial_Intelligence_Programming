@@ -85,7 +85,13 @@ def main():
         total_rewards += run_algorithm(env, q_dict)
         episode += 1
         if episode % 100 == 0:
-            print("{:>5}".format(episode), "\t", "{:<6}".format(total_rewards/100))
+            print("{:>5}".format(episode), "\t", "{:<6}".format(total_rewards/100), end="")
+            for i in range(100):
+                if i <= total_rewards/2:
+                    print("-", end="")
+                else:
+                    break
+            print()
             total_rewards = 0
         elif episode == 1:
             print("{:>5}".format(episode), "\t",  "{:<6}".format(total_rewards))

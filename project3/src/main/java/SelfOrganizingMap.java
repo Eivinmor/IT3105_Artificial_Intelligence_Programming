@@ -6,10 +6,11 @@ import java.util.concurrent.TimeUnit;
 
 public class SelfOrganizingMap {
 
+
     private int numOfNodes, numOfCities, numOfIterations, min_x, max_x, min_y, max_y;
     private double[][] nodeWeights, cityCoords;
     private Random random;
-    private double radius, radiusDecay, learningRate, learningDecay;
+    private double radius, radiusDecay, learningRate, learningDecay, iterationTime, graphMargin;
     private String area;
     private long runTime, startTime, endTime;
 
@@ -24,6 +25,8 @@ public class SelfOrganizingMap {
         this.area = "wi29";
         this.numOfIterations = 10000;
         this.runTime = 20;
+        this.iterationTime = 0.1;
+        this.graphMargin = 0.1;
         // -----------------------------------------------
         this.min_x = Integer.MAX_VALUE;
         this.max_x = 0;
@@ -31,6 +34,8 @@ public class SelfOrganizingMap {
         this.max_y = 0;
         random = new Random();
         cityCoords = readCityCoords(area);
+        scaleMaxValues(graphMargin);
+        writeGraphConfig(min_x, max_x, min_y, max_y);
         numOfCities = cityCoords.length;
         this.numOfNodes = 2*numOfCities;
         nodeWeights = genRandomNodes();
@@ -71,6 +76,7 @@ public class SelfOrganizingMap {
             endTime = System.currentTimeMillis();
             TimeUnit.MILLISECONDS.sleep(100);
         }
+
     }
 
     private int findBmu(int city) {
@@ -89,9 +95,6 @@ public class SelfOrganizingMap {
         return bmu;
     }
 
-    private double euclDistance(double x1, double y1, double x2, double y2) {
-        return Math.sqrt(Math.pow(x1-x2, 2) + Math.pow(y1-y2, 2));
-    }
 
     private void updateNeighbours(int node, int city) {
         nodeWeights[node] = getNewWeights(node, city, 0);
@@ -128,12 +131,8 @@ public class SelfOrganizingMap {
     private double neighbourhoodFunction(int latticeDist){
         return 1-(latticeDist/radius);
     }
-
-    private double[] genRandomWeights() {
-        double[] weights = new double[2];
-        weights[0] = this.random.nextFloat() * (max_x - min_x) + min_x;
-        weights[1] = this.random.nextFloat() * (max_y - min_y) + min_y;
-        return weights;
+    private double euclDistance(double x1, double y1, double x2, double y2) {
+        return Math.sqrt(Math.pow(x1-x2, 2) + Math.pow(y1-y2, 2));
     }
 
     private double[][] genRandomNodes() {
@@ -153,7 +152,6 @@ public class SelfOrganizingMap {
 
         }
     }
-
 
     private double[][] readCityCoords(String filename) {
         double[][] newCityCoordsArray = new double[1][1];
@@ -189,24 +187,54 @@ public class SelfOrganizingMap {
 
 
 
+    private void writeGraphConfig(int min_x,int max_x, int min_y, int max_y){
+        try (Writer writer = new BufferedWriter(new OutputStreamWriter(
+                new FileOutputStream("C:\\Users\\Eirikpc\\Documents\\graph.dat"), "utf-8"))){
+            writer.write("set loadpath 'C:\\Users\\Eirikpc\\NTNU\\IT3105_Artificial_Intelligence_Programming\\project3'\n");
+            writer.write("set xrange ["+min_x+":"+max_x+"]\n");
+            writer.write("set yrange ["+min_y+":"+max_y+"]\n");
+            writer.write("plot \"weights.plot\" using 1:2 title \"Weights\" with linespoints, \"cities.plot\" using 1:2 title \"Cities\"\n");
+            writer.write("pause "+ iterationTime +"\n");
+            writer.write("reread\n");
+        }catch (Exception e){
+        }
+    }
+
+    private double[] genRandomWeights() {
+        double[] weights = new double[2];
+        weights[0] = this.random.nextFloat() * (max_x - min_x) + min_x;
+        weights[1] = this.random.nextFloat() * (max_y - min_y) + min_y;
+        return weights;
+    }
+
+
     private void setMaxValues(double x, double y) {
         if (x < this.min_x) {
             this.min_x = (int) x-1;
         }
-        else if (x > this.max_x) {
+        if (x > this.max_x) {
             this.max_x = (int) x+1;
         }
         if (y < this.min_y) {
             this.min_y = (int) y-1;
         }
-        else if (y > this.max_y) {
+        if (y > this.max_y) {
             this.max_y = (int) y+1;
         }
     }
 
+    private void scaleMaxValues(double percentage) {
+        double distance = (max_x - min_x) * percentage;
+        min_x -= distance;
+        max_x += distance;
+
+        distance = (max_y - min_y) * percentage;
+        min_y -= distance;
+        max_y += distance;
+    }
+
     public static void main(String[] args) throws InterruptedException {
         SelfOrganizingMap som = new SelfOrganizingMap();
-
         som.runAlgorithm();
 
     }
@@ -224,6 +252,10 @@ public class SelfOrganizingMap {
 //            return 0;
 //        }
 //        return 1 - (euclDistance/radius);
+//    }
+
+//    public double normalize(double input, double inputHigh, double inputLow, double normalizedHigh, double normalizedLow){
+//        return ((input - inputLow) / (inputHigh - inputLow)) * (normalizedHigh - normalizedLow) + normalizedLow;
 //    }
 
 }

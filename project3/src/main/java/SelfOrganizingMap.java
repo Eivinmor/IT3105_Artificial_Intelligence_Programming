@@ -1,11 +1,8 @@
-import java.io.BufferedReader;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.IOException;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.Random;
 import java.lang.Math;
-
+import java.util.concurrent.TimeUnit;
 
 public class SelfOrganizingMap {
 
@@ -14,6 +11,7 @@ public class SelfOrganizingMap {
     private Random random;
     private double radius, radiusDecay, learningRate, learningDecay;
     private String area;
+    private long runTime, startTime, endTime;
 
 
     private SelfOrganizingMap() {
@@ -25,6 +23,7 @@ public class SelfOrganizingMap {
         this.learningDecay = 0.0001;
         this.area = "wi29";
         this.numOfIterations = 10000;
+        this.runTime = 20;
         // -----------------------------------------------
         this.min_x = Integer.MAX_VALUE;
         this.max_x = 0;
@@ -35,31 +34,42 @@ public class SelfOrganizingMap {
         numOfCities = cityCoords.length;
         this.numOfNodes = 2*numOfCities;
         nodeWeights = genRandomNodes();
+
     }
 
-    private void runAlgorithm() {
+    private void runAlgorithm() throws InterruptedException {
+
+
         System.out.println("\nCITY COORDS:");
         for (int i = 0; i < cityCoords.length; i++) {
             System.out.println(cityCoords[i][0] + " " + cityCoords[i][1]);
         }
-//
-        System.out.println("\nRANDOM NODES:");
-        for (double[] weight_array: nodeWeights) {
-            System.out.print(weight_array[0]);
-            System.out.println("\t" + weight_array[1]);
-        }
 
-        for (int i = 0; i < numOfIterations; i++) {
-            for (int city = 0; city < numOfCities; city++) {
-                int bmu = findBmu(city);
-                updateNeighbours(bmu, city);
+        startTime = System.currentTimeMillis();
+
+        while (endTime - startTime < runTime * 1000){
+            System.out.println("\nNODES:");
+            try (Writer writer = new BufferedWriter(new OutputStreamWriter(
+                    new FileOutputStream("weights.plot"), "utf-8"))) {
+                for (double[] weight_array: nodeWeights) {
+                    System.out.print(weight_array[0]);
+                    System.out.println("\t" + weight_array[1]);
+                    writer.write(weight_array[0] + "\t" + weight_array[1] + "\n");
+                }
+
+            }catch (Exception e){
+
             }
-        }
 
-        System.out.println("\nUPDATED NODES");
-        for (double[] weight_array: nodeWeights) {
-            System.out.print(weight_array[0]);
-            System.out.println("\t" + weight_array[1]);
+            for (int i = 0; i < numOfIterations; i++) {
+                for (int city = 0; city < numOfCities; city++) {
+                    int bmu = findBmu(city);
+                    updateNeighbours(bmu, city);
+                }
+            }
+
+            endTime = System.currentTimeMillis();
+            TimeUnit.MILLISECONDS.sleep(100);
         }
     }
 
@@ -134,6 +144,17 @@ public class SelfOrganizingMap {
         return random_nodes;
     }
 
+    private void writeLine(String filename, String line) {
+        try (Writer writer = new BufferedWriter(new OutputStreamWriter(
+                new FileOutputStream(filename), "utf-8"))) {
+            writer.write(line + "\n");
+            writer.write(line + "\n");
+        }catch (Exception e){
+
+        }
+    }
+
+
     private double[][] readCityCoords(String filename) {
         double[][] newCityCoordsArray = new double[1][1];
         ArrayList<double[]> newCityCoords = new ArrayList<>();
@@ -166,6 +187,8 @@ public class SelfOrganizingMap {
         return newCityCoordsArray;
     }
 
+
+
     private void setMaxValues(double x, double y) {
         if (x < this.min_x) {
             this.min_x = (int) x-1;
@@ -181,8 +204,9 @@ public class SelfOrganizingMap {
         }
     }
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws InterruptedException {
         SelfOrganizingMap som = new SelfOrganizingMap();
+
         som.runAlgorithm();
 
     }

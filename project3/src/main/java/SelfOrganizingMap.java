@@ -5,12 +5,12 @@ import java.lang.Math;
 import java.util.concurrent.TimeUnit;
 
 public class SelfOrganizingMap {
+//gnuplot -c "C:/Users/Eirikpc/Documents/graph.dat"
 
-
-    private int numOfNodes, numOfCities, numOfIterations, min_x, max_x, min_y, max_y;
+    private int numOfNodes, numOfCities, numOfIterations, min_x, max_x, min_y, max_y, iterations, iterationsPerWrite;
     private double[][] nodeWeights, cityCoords;
     private Random random;
-    private double radius, radiusDecay, learningRate, learningDecay, iterationTime, graphMargin;
+    private double radius, radiusDecay, learningRate, learningDecay, plotIterationTime, graphMargin;
     private String area;
     private long runTime, startTime, endTime;
 
@@ -18,15 +18,15 @@ public class SelfOrganizingMap {
     private SelfOrganizingMap() {
 
         // ---- SETTINGS ---------------------------------
-        this.radius = 3;
-        this.radiusDecay = 0.0001;
-        this.learningRate = 0.2;
-        this.learningDecay = 0.0001;
-        this.area = "wi29";
+        this.radiusDecay = 0.01;
+        this.learningRate = 0.1;
+        this.learningDecay = 0.001;
+        this.area = "uy734";
         this.numOfIterations = 10000;
         this.runTime = 20;
-        this.iterationTime = 0.1;
+        this.plotIterationTime = 0.1;
         this.graphMargin = 0.1;
+        this.iterationsPerWrite = 10;
         // -----------------------------------------------
         this.min_x = Integer.MAX_VALUE;
         this.max_x = 0;
@@ -37,52 +37,56 @@ public class SelfOrganizingMap {
         scaleMaxValues(graphMargin);
         writeGraphConfig(min_x, max_x, min_y, max_y);
         numOfCities = cityCoords.length;
-        this.numOfNodes = 2*numOfCities;
+        this.numOfNodes = numOfCities*2;
+        this.radius = numOfNodes/2;
         nodeWeights = genRandomNodes();
+        writeCityCoordsToFile();
 
     }
 
     private void runAlgorithm() throws InterruptedException {
 
-
         System.out.println("\nCITY COORDS:");
         for (int i = 0; i < cityCoords.length; i++) {
             System.out.println(cityCoords[i][0] + " " + cityCoords[i][1]);
         }
-
         startTime = System.currentTimeMillis();
+        iterations = 0;
 
         while (endTime - startTime < runTime * 1000){
-            System.out.println("\nNODES:");
-            try (Writer writer = new BufferedWriter(new OutputStreamWriter(
-                    new FileOutputStream("weights.plot"), "utf-8"))) {
-                for (double[] weight_array: nodeWeights) {
-                    System.out.print(weight_array[0]);
-                    System.out.println("\t" + weight_array[1]);
-                    writer.write(weight_array[0] + "\t" + weight_array[1] + "\n");
-                }
-
-            }catch (Exception e){
-
+            if(iterations % iterationsPerWrite == 0){
+                writeWeightsToFile();
             }
-
-            for (int i = 0; i < numOfIterations; i++) {
-                for (int city = 0; city < numOfCities; city++) {
-                    int bmu = findBmu(city);
-                    updateNeighbours(bmu, city);
-                }
+            for (int city = 0; city < numOfCities; city++) {
+                int bmu = findBmu(city);
+                updateNeighbours(bmu, city);
             }
-
             endTime = System.currentTimeMillis();
-            TimeUnit.MILLISECONDS.sleep(100);
+            radius *= 1-radiusDecay;
+            learningRate *= 1-learningDecay;
+            iterations++;
+            System.out.println("Iteration: " + iterations);
         }
+        System.out.println("\nTotal distance: " + calcTotalEuclDistance());
+        System.out.println("Iterations: " + iterations);
+    }
 
+    private void writeWeightsToFile(){
+        try (Writer writer = new BufferedWriter(new OutputStreamWriter(
+                new FileOutputStream("weights.plot"), "utf-8"))) {
+            for (double[] weight_array: nodeWeights) {
+                //                    System.out.print(weight_array[0]);
+                //                    System.out.println("\t" + weight_array[1]);
+                writer.write(weight_array[0] + "\t" + weight_array[1] + "\n");
+            }
+            writer.write(nodeWeights[0][0] + " " + nodeWeights[0][1]);
+        }
+        catch (Exception e){}
     }
 
     private int findBmu(int city) {
         double city_x = cityCoords[city][0];
         double city_y = cityCoords[city][1];
-//        System.out.println("\nFinding BMU for " + city_x + " " + city_y);
         int bmu = -1;
         double lowest_dist = Double.MAX_VALUE;
         for (int i = 0; i < numOfNodes; i++) {
@@ -95,24 +99,19 @@ public class SelfOrganizingMap {
         return bmu;
     }
 
-
     private void updateNeighbours(int node, int city) {
         nodeWeights[node] = getNewWeights(node, city, 0);
         for (int i = 1; i <= radius; i++) {
             if ((node+i) > (numOfNodes - 1)) {
-                nodeWeights[node+i-numOfNodes] = getNewWeights(node, city, i);
+                nodeWeights[node+i-numOfNodes] = getNewWeights(node+i-numOfNodes, city, i);
             }
-            else {
-                nodeWeights[node+i] = getNewWeights(node, city, i);
-            }
+            else nodeWeights[node+i] = getNewWeights(node+i, city, i);
         }
         for (int i = 1; i <= radius; i++) {
             if ((node-i) < 0) {
-                nodeWeights[node-i+numOfNodes] = getNewWeights(node, city, i);
+                nodeWeights[node-i+numOfNodes] = getNewWeights(node-i+numOfNodes, city, i);
             }
-            else{
-                nodeWeights[node-i] = getNewWeights(node, city, i);
-            }
+            else nodeWeights[node-i] = getNewWeights(node-i, city, i);
         }
     }
 
@@ -129,8 +128,9 @@ public class SelfOrganizingMap {
     }
 
     private double neighbourhoodFunction(int latticeDist){
-        return 1-(latticeDist/radius);
+            return 1-(latticeDist/radius);
     }
+
     private double euclDistance(double x1, double y1, double x2, double y2) {
         return Math.sqrt(Math.pow(x1-x2, 2) + Math.pow(y1-y2, 2));
     }
@@ -185,7 +185,32 @@ public class SelfOrganizingMap {
         return newCityCoordsArray;
     }
 
+    private void writeCityCoordsToFile() {
+        try (Writer writer = new BufferedWriter(new OutputStreamWriter(
+                new FileOutputStream("cities.plot"), "utf-8"))){
+            for (int i = 0; i < numOfCities; i++) {
+                writer.write(cityCoords[i][0] + " " + cityCoords[i][1] + "\n");
+            }
+        }
+        catch (Exception e){ }
+    }
 
+    private double calcTotalEuclDistance() {
+        double totalEuclDistance =  0;
+        for (int i = 0; i < numOfNodes-2; i++) {
+            double n1_x = nodeWeights[i][0];
+            double n1_y = nodeWeights[i][1];
+            double n2_x = nodeWeights[i+1][0];
+            double n2_y = nodeWeights[i+1][1];
+            totalEuclDistance += euclDistance(n1_x, n1_y, n2_x, n2_y);
+        }
+        double n1_x = nodeWeights[numOfNodes-1][0];
+        double n1_y = nodeWeights[numOfNodes-1][1];
+        double n2_x = nodeWeights[0][0];
+        double n2_y = nodeWeights[0][1];
+        totalEuclDistance += euclDistance(n1_x, n1_y, n2_x, n2_y);
+        return totalEuclDistance;
+    }
 
     private void writeGraphConfig(int min_x,int max_x, int min_y, int max_y){
         try (Writer writer = new BufferedWriter(new OutputStreamWriter(
@@ -194,9 +219,10 @@ public class SelfOrganizingMap {
             writer.write("set xrange ["+min_x+":"+max_x+"]\n");
             writer.write("set yrange ["+min_y+":"+max_y+"]\n");
             writer.write("plot \"weights.plot\" using 1:2 title \"Weights\" with linespoints, \"cities.plot\" using 1:2 title \"Cities\"\n");
-            writer.write("pause "+ iterationTime +"\n");
+            writer.write("pause "+ plotIterationTime +"\n");
             writer.write("reread\n");
-        }catch (Exception e){
+        }
+        catch (Exception e){
         }
     }
 
@@ -207,55 +233,29 @@ public class SelfOrganizingMap {
         return weights;
     }
 
-
     private void setMaxValues(double x, double y) {
-        if (x < this.min_x) {
-            this.min_x = (int) x-1;
-        }
-        if (x > this.max_x) {
-            this.max_x = (int) x+1;
-        }
-        if (y < this.min_y) {
-            this.min_y = (int) y-1;
-        }
-        if (y > this.max_y) {
-            this.max_y = (int) y+1;
-        }
+        if (x < this.min_x) this.min_x = (int) x-1;
+        if (x > this.max_x) this.max_x = (int) x+1;
+        if (y < this.min_y) this.min_y = (int) y-1;
+        if (y > this.max_y) this.max_y = (int) y+1;
     }
 
     private void scaleMaxValues(double percentage) {
         double distance = (max_x - min_x) * percentage;
         min_x -= distance;
         max_x += distance;
-
         distance = (max_y - min_y) * percentage;
         min_y -= distance;
         max_y += distance;
     }
 
+
     public static void main(String[] args) throws InterruptedException {
         SelfOrganizingMap som = new SelfOrganizingMap();
         som.runAlgorithm();
-
     }
-
-
-    // Old neighbourhood function
-//    private double neighbourhoodFunction(double[][] nodeWeights , int node1, int node2){
-//        double x1 = nodeWeights[node1][0];
-//        double y1 = nodeWeights[node1][1];
-//        double x2 = nodeWeights[node2][0];
-//        double y2 = nodeWeights[node2][1];
-//        double euclDistance = euclDistance(x1, y1, x2, y2);
-//        if (euclDistance > radius) {
-//            System.out.println(0);
-//            return 0;
-//        }
-//        return 1 - (euclDistance/radius);
-//    }
 
 //    public double normalize(double input, double inputHigh, double inputLow, double normalizedHigh, double normalizedLow){
 //        return ((input - inputLow) / (inputHigh - inputLow)) * (normalizedHigh - normalizedLow) + normalizedLow;
 //    }
-
 }

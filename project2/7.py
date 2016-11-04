@@ -29,8 +29,8 @@ def run_algorithm(env, q_dict):
         observation, reward, done, info = env.step(action)
         next_action = get_epsilon_greedy_action(q_dict[observation], env.action_space.n)
 
-        set_q_value_q(prev_observation, observation, action, reward, q_dict)
-        # set_q_value_sarsa(prev_observation, observation, action, next_action, reward, q_dict)
+        # set_q_value_q(prev_observation, observation, action, reward, q_dict)
+        set_q_value_sarsa(prev_observation, observation, action, next_action, reward, q_dict)
 
         epsilon *= 1-epsilon_decay
         learning_rate *= 1-learning_decay

@@ -9,7 +9,7 @@ import java.util.concurrent.TimeUnit;
 //gnuplot -c "C:\Users\Eivind\Documents\graph.dat"
 
 public class SelfOrganizingMap {
-    private int numOfNodes, numOfCities, nodesPerCity, numOfIterations, min_x, max_x, min_y, max_y, iterations, iterationsPerWrite;
+    private int numOfNodes, numOfCities, nodesPerCity, iteration, maxIterations, min_x, max_x, min_y, max_y, iterationsPerWrite;
     private double[][] nodeWeights, cityCoords;
     private Random random;
     private double radius, radiusDecay, learningRate, learningDecay, plotIterationTime, graphMargin;
@@ -19,12 +19,12 @@ public class SelfOrganizingMap {
     private SelfOrganizingMap() {
         // ---- SETTINGS ---------------------------------
         area = "qa194";
-        radiusDecay = 0.01;
         learningRate = 0.1;
         learningDecay = 0.001;
-        numOfIterations = 10000;
-        runTime = 40;
+        radiusDecay = 0.01;
         nodesPerCity = 10;
+        runTime = 40;
+//        maxIterations = 10000;
         iterationsPerWrite = 10;
         plotIterationTime = 0.1;
         graphMargin = 0.1;
@@ -50,10 +50,10 @@ public class SelfOrganizingMap {
 //            System.out.println(cityCoords[i][0] + " " + cityCoords[i][1]);
 //        }
         startTime = System.currentTimeMillis();
-        iterations = 0;
+        iteration = 0;
 
         while (endTime - startTime < runTime * 1000){
-            if(iterations % iterationsPerWrite == 0){
+            if(iteration % iterationsPerWrite == 0){
                 writeWeightsToFile();
             }
             for (int city = 0; city < numOfCities; city++) {
@@ -63,10 +63,10 @@ public class SelfOrganizingMap {
             endTime = System.currentTimeMillis();
             radius *= 1-radiusDecay;
             learningRate *= 1-learningDecay;
-            iterations++;
-            System.out.println("Iteration: " + iterations);
+            iteration++;
+            System.out.println("Iteration: " + iteration);
         }
-        System.out.println("\nTotal iterations: " + iterations);
+        System.out.println("\nTotal iteration: " + iteration);
         System.out.println("Total node chain distance: " + getTotalNodeEuclDistance());
         System.out.println("Total ordered city distance: " + getTotalOrderedCityEuclDistance()); //fint navn :^=)
     }

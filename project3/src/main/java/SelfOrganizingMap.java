@@ -10,40 +10,34 @@ import org.apache.commons.io.FileUtils;
 //  gnuplot -c "C:/Users/Eivind/Documents/graph.dat"
 
 public class SelfOrganizingMap {
-    private boolean stepByStep, printDistPerWrite;
-    private int numOfNodes, numOfCities, nodesPerCity, min_x, max_x, min_y, max_y,
+    boolean stepByStep, printDistPerWrite;
+    int numOfNodes, numOfCities, nodesPerCity, min_x, max_x, min_y, max_y,
             iterationsPerWrite, learningDecayType, radiusDecayType, maxEpochs;
-    private final int STATIC = 0, LIN = 1, EXP = 2;
-    private double radius, linRadiusDecay, expRadiusDecay, linLearningDecay, initLearningRate, learningRate, expLearningDecay,
+    final int STATIC = 0, LIN = 1, EXP = 2;
+    double radius, linRadiusDecay, expRadiusDecay, linLearningDecay, initLearningRate, learningRate, expLearningDecay,
             plotIterationDelay, graphMargin, initRadiusFactor;
 //    private long maxRunTime, startTime, endTime;
-    private double[][] nodeWeights, cityCoords;
-    private String area;
-    private Random random;
+    double[][] nodeWeights, cityCoords;
+    String area;
+    Random random;
 
     private SelfOrganizingMap() {
 
         // ---- SETTINGS ---------------------------------
-        area = "wi29";
+        area = "qa194";
 
-        initLearningRate = 0.1;     // 0.1
-        learningDecayType = STATIC;
-        expLearningDecay = 0.001;      // 0.001
+        learningDecayType = LIN;
+        radiusDecayType = LIN;
 
-        initRadiusFactor = 1/4.0;       // 1/2.0
-        radiusDecayType = STATIC;
-        expRadiusDecay = 0.01;         // 0.01    Trade-off between efficiency and accuracy (the higher the faster)
-
-        nodesPerCity = 2;           // 2       Trade-off (obviously)
 //        maxRunTime = 200;
-        maxEpochs = 2000;
+        maxEpochs = 8000;
         printDistPerWrite = false;
         stepByStep = false;
-        iterationsPerWrite = 2;
+        iterationsPerWrite = 10;
         plotIterationDelay = 0.1;
         graphMargin = 0.1;
         // -----------------------------------------------
-
+        Settings.getSettings(this);
         learningRate = initLearningRate;
         min_x = Integer.MAX_VALUE;
         max_x = 0;

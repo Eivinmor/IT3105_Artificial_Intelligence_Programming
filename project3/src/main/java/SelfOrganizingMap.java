@@ -12,11 +12,11 @@ import org.apache.commons.io.FileUtils;
 public class SelfOrganizingMap {
     private boolean stepByStep, printDistPerWrite;
     private int numOfNodes, numOfCities, nodesPerCity, min_x, max_x, min_y, max_y,
-            iterationsPerWrite, learningDecayType, radiusDecayType;
+            iterationsPerWrite, learningDecayType, radiusDecayType, maxEpochs;
     private final int STATIC = 0, LIN = 1, EXP = 2;
-    private double radius, radiusDecay, initLearningRate, learningRate, learningDecay,
-            plotIterationDelay, graphMargin, radiusFactor;
-    private long maxRunTime, startTime, endTime;
+    private double radius, linRadiusDecay, expRadiusDecay, linLearningDecay, initLearningRate, learningRate, expLearningDecay,
+            plotIterationDelay, graphMargin, initRadiusFactor;
+//    private long maxRunTime, startTime, endTime;
     private double[][] nodeWeights, cityCoords;
     private String area;
     private Random random;
@@ -24,21 +24,22 @@ public class SelfOrganizingMap {
     private SelfOrganizingMap() {
 
         // ---- SETTINGS ---------------------------------
-        area = "uy734";
+        area = "wi29";
 
         initLearningRate = 0.1;     // 0.1
-        learningDecay = 0.001;      // 0.001
-        learningDecayType = EXP;
+        learningDecayType = STATIC;
+        expLearningDecay = 0.001;      // 0.001
 
-        radiusDecay = 0.01;         // 0.01    Trade-off between efficiency and accuracy (the higher the faster)
-        radiusDecayType = EXP;
-        radiusFactor = 1/2.0;       // 1/2.0
+        initRadiusFactor = 1/4.0;       // 1/2.0
+        radiusDecayType = STATIC;
+        expRadiusDecay = 0.01;         // 0.01    Trade-off between efficiency and accuracy (the higher the faster)
 
-        nodesPerCity = 10;           // 2       Trade-off (obviously)
-        maxRunTime = 200;
+        nodesPerCity = 2;           // 2       Trade-off (obviously)
+//        maxRunTime = 200;
+        maxEpochs = 2000;
         printDistPerWrite = false;
         stepByStep = false;
-        iterationsPerWrite = 1;
+        iterationsPerWrite = 2;
         plotIterationDelay = 0.1;
         graphMargin = 0.1;
         // -----------------------------------------------
@@ -54,8 +55,10 @@ public class SelfOrganizingMap {
         writeGraphConfig(min_x, max_x, min_y, max_y);
         numOfCities = cityCoords.length;
         numOfNodes = numOfCities*nodesPerCity;
-        radius = numOfNodes*radiusFactor;
+        radius = numOfNodes*initRadiusFactor;
         nodeWeights = genRandomNodes();
+        linLearningDecay = initLearningRate/(double)maxEpochs;
+        linRadiusDecay = radius/(double)maxEpochs;
         writeCityCoordsToFile();
         writeWeightsToFile(); // Shows initial random weights
     }
@@ -63,21 +66,17 @@ public class SelfOrganizingMap {
     private void runAlgorithm() throws InterruptedException {
 
         Scanner reader = new Scanner(System.in);
-        startTime = System.currentTimeMillis();
-        int epoch = 0;
+//        startTime = System.currentTimeMillis();
+        int epoch = 1;
         if(stepByStep) reader.nextLine();
 
-        while (endTime - startTime < maxRunTime * 1000){
+        while (epoch <= maxEpochs){
+            System.out.println("Epoch " + epoch);
             for (int city = 0; city < numOfCities; city++) {
                 int bmu = findBmu(city);
                 updateNeighbours(bmu, city);
             }
-            endTime = System.currentTimeMillis();
-            updateRadius();
-            updateLearningRate();
-            epoch++;
-            System.out.println("Epoch " + epoch);
-
+//            endTime = System.currentTimeMillis();
             if(epoch % iterationsPerWrite == 0){
                 if (!writeWeightsToFile()) break;
                 if (printDistPerWrite) {
@@ -86,36 +85,43 @@ public class SelfOrganizingMap {
                 }
                 if(stepByStep) reader.nextLine();
             }
+            epoch++;
+            updateRadius();
+            updateLearningRate();
         }
 //        nodeWeights = readWeights(); //Used to read weights from file
-        System.out.println("\nArea................." + area.replace("alt/", ""));
+        System.out.println();
+        System.out.println("Area................." + area.replace("alt/", ""));
+        System.out.println();
         System.out.println("Init learning rate..." + initLearningRate);
         System.out.println("Learning decay type.." + translateDecayType(learningDecayType));
-        System.out.println("Learning decay......." + learningDecay);
-        System.out.println("Radius factor........" + radiusFactor);
+        System.out.println("EXP learning decay..." + expLearningDecay);
+        System.out.println();
+        System.out.println("Init radius factor..." + initRadiusFactor);
         System.out.println("Radius decay type...." + translateDecayType(learningDecayType));
-        System.out.println("\nNodes per city......." + nodesPerCity);
-        System.out.println("Run run time........." + (endTime - startTime) + " ms");
+        System.out.println("EXP Radius decay....." + expRadiusDecay);
+        System.out.println();
+        System.out.println("Nodes per city......." + nodesPerCity);
+//        System.out.println("Max run time........." + (endTime - startTime) + "ms");
         System.out.println("Total epochs........." + epoch);
-        System.out.println("\nTotal node chain distance....." + getTotalNodeEuclDistance());
+        System.out.println();
+        System.out.println("Total node chain distance....." + getTotalNodeEuclDistance());
         System.out.println("Total ordered city distance..." + getTotalOrderedCityEuclDistance());
     }
 
     private void updateLearningRate() {
-        if (learningDecayType == EXP) learningRate *= 1-learningDecay;
+        if (learningDecayType == EXP) learningRate *= 1-expLearningDecay;
         else if (learningDecayType == LIN) {
-            double newLearningRate = learningRate - learningDecay;
-            if (newLearningRate > 0) learningRate = newLearningRate;
-            else learningRate = 0;
+            learningRate -= linLearningDecay;
         }
     }
 
     private void updateRadius() {
-        if (radiusDecayType == EXP) radius *= 1-radiusDecay;
+        if (radiusDecayType == EXP) radius *= 1-expRadiusDecay;
         else if (radiusDecayType == LIN) {
-            double newRadius = radius - radiusDecay;
-            if (newRadius >= 0.5) radius = newRadius;
-            else radius = 0.5;  // 0.5 to avoid dividing by 0. No functional difference.
+            double newRadius = radius - linRadiusDecay;
+            if(newRadius>0) radius = newRadius;
+            else radius = 0;
         }
     }
 
@@ -174,7 +180,7 @@ public class SelfOrganizingMap {
     private double getTotalOrderedCityEuclDistance() {
         ArrayList<ArrayList<Integer>> nodeClassList = new ArrayList<>(numOfNodes);
         for (int i = 0; i < numOfNodes; i++) {
-            nodeClassList.add(new ArrayList<Integer>());
+            nodeClassList.add(new ArrayList<>());
         }
         for (int i = 0; i < numOfCities; i++) {
             nodeClassList.get(findBmu(i)).add(i);

@@ -37,7 +37,7 @@ public class SelfOrganizingMap {
         nodesPerCity = 2;           // 2       Trade-off (obviously)
         maxRunTime = 200;
         printDistPerWrite = false;
-        stepByStep = true;
+        stepByStep = false;
         iterationsPerWrite = 1;
         plotIterationDelay = 0.1;
         graphMargin = 0.1;

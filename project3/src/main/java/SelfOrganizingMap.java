@@ -24,7 +24,7 @@ public class SelfOrganizingMap {
     private SelfOrganizingMap() {
 
         // ---- SETTINGS ---------------------------------
-        area = "dj38";
+        area = "uy734";
 
         initLearningRate = 0.1;     // 0.1
         learningDecay = 0.001;      // 0.001
@@ -34,7 +34,7 @@ public class SelfOrganizingMap {
         radiusDecayType = EXP;
         radiusFactor = 1/2.0;       // 1/2.0
 
-        nodesPerCity = 2;           // 2       Trade-off (obviously)
+        nodesPerCity = 10;           // 2       Trade-off (obviously)
         maxRunTime = 200;
         printDistPerWrite = false;
         stepByStep = false;
@@ -95,7 +95,7 @@ public class SelfOrganizingMap {
         System.out.println("Radius factor........" + radiusFactor);
         System.out.println("Radius decay type...." + translateDecayType(learningDecayType));
         System.out.println("\nNodes per city......." + nodesPerCity);
-        System.out.println("Max run time........." + maxRunTime);
+        System.out.println("Run run time........." + (endTime - startTime) + " ms");
         System.out.println("Total epochs........." + epoch);
         System.out.println("\nTotal node chain distance....." + getTotalNodeEuclDistance());
         System.out.println("Total ordered city distance..." + getTotalOrderedCityEuclDistance());

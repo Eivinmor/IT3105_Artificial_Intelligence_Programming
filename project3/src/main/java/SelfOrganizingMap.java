@@ -97,7 +97,7 @@ public class SelfOrganizingMap {
         System.out.println();
         System.out.println("Nodes per city......." + nodesPerCity);
 //        System.out.println("Max run time........." + (endTime - startTime) + "ms");
-        System.out.println("Total epochs........." + epoch);
+        System.out.println("Total epochs........." + (epoch-1));
         System.out.println();
         System.out.println("Total node chain distance....." + getTotalNodeEuclDistance());
         System.out.println("Total ordered city distance..." + getTotalOrderedCityEuclDistance());

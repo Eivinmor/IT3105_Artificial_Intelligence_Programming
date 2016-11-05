@@ -28,16 +28,16 @@ public class SelfOrganizingMap {
 
         initLearningRate = 0.1;     // 0.1
         learningDecay = 0.001;      // 0.001
-        learningDecayType = STATIC;
+        learningDecayType = EXP;
 
-        radiusDecay = 0.1;         // 0.01    Trade-off between efficiency and accuracy (the higher the faster)
-        radiusDecayType = STATIC;
+        radiusDecay = 0.01;         // 0.01    Trade-off between efficiency and accuracy (the higher the faster)
+        radiusDecayType = EXP;
         radiusFactor = 1/2.0;       // 1/2.0
 
         nodesPerCity = 2;           // 2       Trade-off (obviously)
         maxRunTime = 200;
         printDistPerWrite = false;
-        stepByStep = false;
+        stepByStep = true;
         iterationsPerWrite = 1;
         plotIterationDelay = 0.1;
         graphMargin = 0.1;
@@ -57,7 +57,7 @@ public class SelfOrganizingMap {
         radius = numOfNodes*radiusFactor;
         nodeWeights = genRandomNodes();
         writeCityCoordsToFile();
-//        writeWeightsToFile(); // Shows initial random weights
+        writeWeightsToFile(); // Shows initial random weights
     }
 
     private void runAlgorithm() throws InterruptedException {
@@ -65,6 +65,7 @@ public class SelfOrganizingMap {
         Scanner reader = new Scanner(System.in);
         startTime = System.currentTimeMillis();
         int epoch = 0;
+        if(stepByStep) reader.nextLine();
 
         while (endTime - startTime < maxRunTime * 1000){
             for (int city = 0; city < numOfCities; city++) {
@@ -87,19 +88,17 @@ public class SelfOrganizingMap {
             }
         }
 //        nodeWeights = readWeights(); //Used to read weights from file
-        System.out.println("\nArea................" + area.replace("alt/", ""));
+        System.out.println("\nArea................." + area.replace("alt/", ""));
         System.out.println("Init learning rate..." + initLearningRate);
         System.out.println("Learning decay type.." + translateDecayType(learningDecayType));
         System.out.println("Learning decay......." + learningDecay);
-        System.out.println("Nodes per city......." + nodesPerCity);
         System.out.println("Radius factor........" + radiusFactor);
         System.out.println("Radius decay type...." + translateDecayType(learningDecayType));
-        System.out.println("\nMax run time........." + maxRunTime);
+        System.out.println("\nNodes per city......." + nodesPerCity);
+        System.out.println("Max run time........." + maxRunTime);
         System.out.println("Total epochs........." + epoch);
         System.out.println("\nTotal node chain distance....." + getTotalNodeEuclDistance());
-        System.out.println("Total ordered city distance..." + getTotalOrderedCityEuclDistance()); //fint navn :^=)
-//        this.plotIterationDelay = Integer.MAX_VALUE;
-//        writeGraphConfig(min_x, max_x, min_y, max_y);
+        System.out.println("Total ordered city distance..." + getTotalOrderedCityEuclDistance());
     }
 
     private void updateLearningRate() {

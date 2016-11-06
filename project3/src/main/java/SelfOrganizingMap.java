@@ -10,30 +10,32 @@ import org.apache.commons.io.FileUtils;
 //  gnuplot -c "C:/Users/Eivind/Documents/graph.dat"
 
 public class SelfOrganizingMap {
-    boolean stepByStep, printDistPerWrite;
-    int numOfNodes, numOfCities, nodesPerCity, min_x, max_x, min_y, max_y,
-            iterationsPerWrite, learningDecayType, radiusDecayType, maxEpochs;
-    final int STATIC = 0, LIN = 1, EXP = 2;
-    double radius, linRadiusDecay, expRadiusDecay, linLearningDecay, initLearningRate, learningRate, expLearningDecay,
-            plotIterationDelay, graphMargin, initRadiusFactor;
-//    private long maxRunTime, startTime, endTime;
-    double[][] nodeWeights, cityCoords;
-    String area;
-    Random random;
+    double expRadiusDecay, initLearningRate, targetLinLearningRate, expLearningDecay, initRadiusFactor, targetLinRadius;
+    int nodesPerCity, learningDecayType, radiusDecayType;
+
+    private boolean stepByStep, printDistPerWrite, nodeBmuOnce;
+    private int numOfNodes, numOfCities, min_x, max_x, min_y, max_y,
+    iterationsPerWrite, maxEpochs;
+    private final int STATIC = 0, LIN = 1, EXP = 2;
+    private double radius, linRadiusDecay, linLearningDecay, learningRate, plotIterationDelay, graphMargin;
+    private double[][] nodeWeights, cityCoords;
+    private boolean[] nodesTaken;
+    private String area;
+    private Random random;
 
     private SelfOrganizingMap() {
 
         // ---- SETTINGS ---------------------------------
-        area = "qa194";
+        area = "wi29";
 
-        learningDecayType = LIN;
-        radiusDecayType = LIN;
-
-//        maxRunTime = 200;
-        maxEpochs = 8000;
+        learningDecayType = STATIC;
+        radiusDecayType = STATIC;
+        nodeBmuOnce = true;         // Improvement for all tested countries -
+                                    // Helps a lot on LIN to prevent crossover with low radius
+        maxEpochs = 1000;
         printDistPerWrite = false;
         stepByStep = false;
-        iterationsPerWrite = 10;
+        iterationsPerWrite = 1;
         plotIterationDelay = 0.1;
         graphMargin = 0.1;
         // -----------------------------------------------
@@ -51,26 +53,29 @@ public class SelfOrganizingMap {
         numOfNodes = numOfCities*nodesPerCity;
         radius = numOfNodes*initRadiusFactor;
         nodeWeights = genRandomNodes();
-        linLearningDecay = initLearningRate/(double)maxEpochs;
-        linRadiusDecay = radius/(double)maxEpochs;
+        linLearningDecay = (initLearningRate-targetLinLearningRate)/(double)maxEpochs;
+        linRadiusDecay = (radius-targetLinRadius)/(double)maxEpochs;
         writeCityCoordsToFile();
-        writeWeightsToFile(); // Shows initial random weights
     }
 
     private void runAlgorithm() throws InterruptedException {
 
         Scanner reader = new Scanner(System.in);
-//        startTime = System.currentTimeMillis();
         int epoch = 1;
-        if(stepByStep) reader.nextLine();
-
+        if(stepByStep) {
+            writeWeightsToFile();
+            System.out.println("\nStep by step enabled. Press Enter to continue...");
+            reader.nextLine();
+        }
         while (epoch <= maxEpochs){
             System.out.println("Epoch " + epoch);
+            if(nodeBmuOnce) nodesTaken = new boolean[numOfNodes];
             for (int city = 0; city < numOfCities; city++) {
-                int bmu = findBmu(city);
+                int bmu;
+                if (nodeBmuOnce) bmu = findBmuOnce(city);
+                else bmu = findBmu(city);
                 updateNeighbours(bmu, city);
             }
-//            endTime = System.currentTimeMillis();
             if(epoch % iterationsPerWrite == 0){
                 if (!writeWeightsToFile()) break;
                 if (printDistPerWrite) {
@@ -83,21 +88,28 @@ public class SelfOrganizingMap {
             updateRadius();
             updateLearningRate();
         }
-//        nodeWeights = readWeights(); //Used to read weights from file
         System.out.println();
-        System.out.println("Area................." + area.replace("alt/", ""));
+        System.out.println("Country..............." + area.replace("alt/", ""));
         System.out.println();
-        System.out.println("Init learning rate..." + initLearningRate);
-        System.out.println("Learning decay type.." + translateDecayType(learningDecayType));
-        System.out.println("EXP learning decay..." + expLearningDecay);
+        System.out.println("Learning decay type..." + translateDecayType(learningDecayType));
+        System.out.println("Init learning rate...." + initLearningRate);
+        if (learningDecayType == EXP) System.out.println("EXP learning decay..." + expLearningDecay);
+        else if (learningDecayType == LIN) {
+            System.out.println("LIN target learning r." + targetLinLearningRate);
+            System.out.println("LIN learning decay...." + linLearningDecay + "(init lr - target lr) / maxEpochs");
+        }
         System.out.println();
-        System.out.println("Init radius factor..." + initRadiusFactor);
-        System.out.println("Radius decay type...." + translateDecayType(learningDecayType));
-        System.out.println("EXP Radius decay....." + expRadiusDecay);
+        System.out.println("Radius decay type....." + translateDecayType(learningDecayType));
+        System.out.println("Init radius factor...." + initRadiusFactor);
+        if (radiusDecayType == EXP) System.out.println("EXP learning decay..." + expRadiusDecay);
+        else if (radiusDecayType == LIN) {
+            System.out.println("LIN learning decay...." + linRadiusDecay + "(start radius - target radius) / maxEpochs");
+            System.out.println("LIN target radius....." + targetLinRadius);
+        }
         System.out.println();
-        System.out.println("Nodes per city......." + nodesPerCity);
-//        System.out.println("Max run time........." + (endTime - startTime) + "ms");
-        System.out.println("Total epochs........." + (epoch-1));
+        System.out.println("Nodes per city........" + nodesPerCity);
+        System.out.println("Node BMU only once...." + nodeBmuOnce);
+        System.out.println("Total epochs.........." + (epoch-1));
         System.out.println();
         System.out.println("Total node chain distance....." + getTotalNodeEuclDistance());
         System.out.println("Total ordered city distance..." + getTotalOrderedCityEuclDistance());
@@ -119,7 +131,6 @@ public class SelfOrganizingMap {
         }
     }
 
-
     private int findBmu(int city) {
         double city_x = cityCoords[city][0];
         double city_y = cityCoords[city][1];
@@ -132,6 +143,22 @@ public class SelfOrganizingMap {
                 lowest_dist = euclDistance;
             }
         }
+        return bmu;
+    }
+
+    private int findBmuOnce(int city) {
+        double city_x = cityCoords[city][0];
+        double city_y = cityCoords[city][1];
+        int bmu = -1;
+        double lowest_dist = Double.MAX_VALUE;
+        for (int i = 0; i < numOfNodes; i++) {
+            double euclDistance = euclDistance(nodeWeights[i][0], nodeWeights[i][1], city_x, city_y);
+            if (euclDistance < lowest_dist && nodeBmuOnce && !nodesTaken[i]) {
+                bmu = i;
+                lowest_dist = euclDistance;
+            }
+        }
+        nodesTaken[bmu] = true;
         return bmu;
     }
 
@@ -240,6 +267,13 @@ public class SelfOrganizingMap {
         return weights;
     }
 
+    private String translateDecayType(int decayType) {
+        if(decayType == 0) return "STATIC";
+        else if (decayType == 1) return "LIN";
+        else if (decayType == 2) return "EXP";
+        return "none";
+    }
+
 
     private double[][] readCityCoords(String filename) {
         double[][] newCityCoordsArray = new double[1][1];
@@ -322,12 +356,12 @@ public class SelfOrganizingMap {
 
 
     private void writeGraphConfig(int min_x,int max_x, int min_y, int max_y){
+//      C:\\Users\\Eirikpc\\Documents\\graph.dat
+//      C:\\Users\\Eirikpc\\NTNU\\IT3105_Artificial_Intelligence_Programming\\project3
         String graphDatFilePath = "C:\\Users\\Eivind\\Documents\\graph.dat";
         String dataFilesDir = "C:\\Users\\Eivind\\IdeaProjects\\IT3105_Artificial_Intelligence_Programming\\project3'";
 
         try (Writer writer = new BufferedWriter(new OutputStreamWriter(
-//                new FileOutputStream("C:\\Users\\Eirikpc\\Documents\\graph.dat"), "utf-8"))){
-//            writer.write("set loadpath 'C:\\Users\\Eirikpc\\NTNU\\IT3105_Artificial_Intelligence_Programming\\project3'\n");
                 new FileOutputStream(graphDatFilePath), "utf-8"))){
             writer.write("set loadpath '" + dataFilesDir + "\n");
             writer.write("set xrange ["+min_x+":"+max_x+"]\n");
@@ -369,12 +403,11 @@ public class SelfOrganizingMap {
             writer.close();
 
             File newWeights = new File("weights_temp.plot");
-            File oldWeights = new File("weights.plot");
-            if (FileUtils.contentEquals(newWeights, oldWeights)) {
+            File curWeights = new File("weights.plot");
+            if (FileUtils.contentEquals(newWeights, curWeights)) {
                 return false;
             }
-            while (!oldWeights.delete() && oldWeights.exists()) {
-            }
+            while (!curWeights.delete() && curWeights.exists()) {}
             while (!newWeights.renameTo(new File("weights.plot"))) {}
         } catch (UnsupportedEncodingException e) {
             e.printStackTrace();
@@ -387,12 +420,7 @@ public class SelfOrganizingMap {
     }
 
 
-    private String translateDecayType(int decayType) {
-        if(decayType == 0) return "STATIC";
-        else if (decayType == 1) return "LIN";
-        else if (decayType == 2) return "EXP";
-        return "none";
-    }
+
 
 
     public static void main(String[] args) throws InterruptedException {

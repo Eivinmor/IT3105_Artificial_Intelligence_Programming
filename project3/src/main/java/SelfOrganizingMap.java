@@ -32,7 +32,7 @@ public class SelfOrganizingMap {
         radiusDecayType = STATIC;
         nodeBmuOnce = true;         // Improvement for all tested countries -
                                     // Helps a lot on LIN to prevent crossover with low radius
-        maxEpochs = 1000;
+        maxEpochs = 100;
         printDistPerWrite = false;
         stepByStep = false;
         iterationsPerWrite = 1;
@@ -89,30 +89,30 @@ public class SelfOrganizingMap {
             updateLearningRate();
         }
         System.out.println();
-        System.out.println("Country..............." + area.replace("alt/", ""));
+        System.out.println("Country............... " + area.replace("alt/", ""));
         System.out.println();
-        System.out.println("Learning decay type..." + translateDecayType(learningDecayType));
-        System.out.println("Init learning rate...." + initLearningRate);
+        System.out.println("Learning decay type... " + translateDecayType(learningDecayType));
+        System.out.println("Init learning rate.... " + initLearningRate);
         if (learningDecayType == EXP) System.out.println("EXP learning decay..." + expLearningDecay);
         else if (learningDecayType == LIN) {
-            System.out.println("LIN target learning r." + targetLinLearningRate);
-            System.out.println("LIN learning decay...." + linLearningDecay + "(init lr - target lr) / maxEpochs");
+            System.out.println("LIN target learning r. " + targetLinLearningRate);
+            System.out.println("LIN learning decay.... " + linLearningDecay + " (init lr - target lr) / maxEpochs");
         }
         System.out.println();
-        System.out.println("Radius decay type....." + translateDecayType(learningDecayType));
-        System.out.println("Init radius factor...." + initRadiusFactor);
+        System.out.println("Radius decay type..... " + translateDecayType(learningDecayType));
+        System.out.println("Init radius factor.... " + initRadiusFactor);
         if (radiusDecayType == EXP) System.out.println("EXP learning decay..." + expRadiusDecay);
         else if (radiusDecayType == LIN) {
-            System.out.println("LIN learning decay...." + linRadiusDecay + "(start radius - target radius) / maxEpochs");
-            System.out.println("LIN target radius....." + targetLinRadius);
+            System.out.println("LIN learning decay.... " + linRadiusDecay + " (start radius - target radius) / maxEpochs");
+            System.out.println("LIN target radius..... " + targetLinRadius);
         }
         System.out.println();
-        System.out.println("Nodes per city........" + nodesPerCity);
-        System.out.println("Node BMU only once...." + nodeBmuOnce);
-        System.out.println("Total epochs.........." + (epoch-1));
+        System.out.println("Nodes per city........ " + nodesPerCity);
+        System.out.println("Node BMU only once.... " + nodeBmuOnce);
+        System.out.println("Total epochs.......... " + (epoch-1));
         System.out.println();
-        System.out.println("Total node chain distance....." + getTotalNodeEuclDistance());
-        System.out.println("Total ordered city distance..." + getTotalOrderedCityEuclDistance());
+        System.out.println("Total node chain distance..... " + getTotalNodeEuclDistance());
+        System.out.println("Total ordered city distance... " + getTotalOrderedCityEuclDistance());
     }
 
     private void updateLearningRate() {

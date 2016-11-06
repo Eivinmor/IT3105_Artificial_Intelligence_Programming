@@ -28,11 +28,11 @@ public class SelfOrganizingMap {
         // ---- SETTINGS ---------------------------------
         area = "uy734";
 
-        learningDecayType = LIN; // {STATIC, LIN, EXP}
-        radiusDecayType = LIN;   // {STATIC, LIN, EXP}
+        learningDecayType = LIN;    // {STATIC, LIN, EXP}
+        radiusDecayType = LIN;      // {STATIC, LIN, EXP}
         nodeBmuOnce = true;         // Improvement for all tested countries -
                                     // Helps a lot on LIN to prevent crossover with low radius
-        maxEpochs = 1500;
+        maxEpochs = 10000;
         printDistPerWrite = false;
         stepByStep = false;
         iterationsPerWrite = 1;
@@ -109,6 +109,7 @@ public class SelfOrganizingMap {
         System.out.println();
         System.out.println("Nodes per city........ " + nodesPerCity);
         System.out.println("Node BMU only once.... " + nodeBmuOnce);
+        System.out.println("Max epochs............ " + maxEpochs);
         System.out.println("Total epochs.......... " + (epoch-1));
         System.out.println();
         System.out.println("Total node chain distance..... " + getTotalNodeEuclDistance());

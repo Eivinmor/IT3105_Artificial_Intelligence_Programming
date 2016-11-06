@@ -28,11 +28,11 @@ public class SelfOrganizingMap {
         // ---- SETTINGS ---------------------------------
         area = "wi29";
 
-        learningDecayType = STATIC;
-        radiusDecayType = STATIC;
+        learningDecayType = EXP; // {STATIC, LIN, EXP}
+        radiusDecayType = EXP;   // {STATIC, LIN, EXP}
         nodeBmuOnce = true;         // Improvement for all tested countries -
                                     // Helps a lot on LIN to prevent crossover with low radius
-        maxEpochs = 100;
+        maxEpochs = 1500;
         printDistPerWrite = false;
         stepByStep = false;
         iterationsPerWrite = 1;
@@ -50,11 +50,11 @@ public class SelfOrganizingMap {
         scaleMaxValues(graphMargin);
         writeGraphConfig(min_x, max_x, min_y, max_y);
         numOfCities = cityCoords.length;
-        numOfNodes = numOfCities*nodesPerCity;
-        radius = numOfNodes*initRadiusNormalised;
+        numOfNodes = numOfCities * nodesPerCity;
+        radius = numOfNodes * initRadiusNormalised;
         nodeWeights = genRandomNodes();
-        linLearningDecay = (initLearningRate-targetLinLearningRate)/(double)maxEpochs;
-        linRadiusDecay = (radius-targetLinRadius)/(double)maxEpochs;
+        linLearningDecay = (initLearningRate - targetLinLearningRate) / (double)maxEpochs;
+        linRadiusDecay = (radius - targetLinRadius) / (double)maxEpochs;
         writeCityCoordsToFile();
     }
 
@@ -74,13 +74,13 @@ public class SelfOrganizingMap {
                 int bmu;
                 if (nodeBmuOnce) bmu = findBmuOnce(city);
                 else bmu = findBmu(city);
-                updateNeighbours(bmu, city);
+                updateNeighbourhood(bmu, city);
             }
             if(epoch % iterationsPerWrite == 0){
                 if (!writeWeightsToFile()) break;
                 if (printDistPerWrite) {
                     System.out.println("Total node chain distance: " + getTotalNodeEuclDistance());
-                    System.out.println("Total ordered city distance: " + getTotalOrderedCityEuclDistance() + "\n");
+                    System.out.println("Total sorted city distance: " + getTotalSortedCityEuclDistance() + "\n");
                 }
                 if(stepByStep) reader.nextLine();
             }
@@ -93,7 +93,7 @@ public class SelfOrganizingMap {
         System.out.println();
         System.out.println("Learning decay type... " + translateDecayType(learningDecayType));
         System.out.println("Init learning rate.... " + initLearningRate);
-        if (learningDecayType == EXP) System.out.println("EXP learning decay..." + expLearningDecay);
+        if (learningDecayType == EXP) System.out.println("EXP learning decay.... " + expLearningDecay);
         else if (learningDecayType == LIN) {
             System.out.println("LIN target learning r. " + targetLinLearningRate);
             System.out.println("LIN learning decay.... " + linLearningDecay + " (init lr - target lr) / maxEpochs");
@@ -101,7 +101,7 @@ public class SelfOrganizingMap {
         System.out.println();
         System.out.println("Radius decay type..... " + translateDecayType(learningDecayType));
         System.out.println("Init radius factor.... " + initRadiusNormalised);
-        if (radiusDecayType == EXP) System.out.println("EXP learning decay..." + expRadiusDecay);
+        if (radiusDecayType == EXP) System.out.println("EXP learning decay.... " + expRadiusDecay);
         else if (radiusDecayType == LIN) {
             System.out.println("LIN learning decay.... " + linRadiusDecay + " (start radius - target radius) / maxEpochs");
             System.out.println("LIN target radius..... " + targetLinRadius);
@@ -112,7 +112,7 @@ public class SelfOrganizingMap {
         System.out.println("Total epochs.......... " + (epoch-1));
         System.out.println();
         System.out.println("Total node chain distance..... " + getTotalNodeEuclDistance());
-        System.out.println("Total ordered city distance... " + getTotalOrderedCityEuclDistance());
+        System.out.println("Total sorted city distance... " + getTotalSortedCityEuclDistance());
     }
 
     private void updateLearningRate() {
@@ -162,7 +162,7 @@ public class SelfOrganizingMap {
         return bmu;
     }
 
-    private void updateNeighbours(int node, int city) {
+    private void updateNeighbourhood(int node, int city) {
         nodeWeights[node] = getNewWeights(node, city, 0);
         for (int i = 1; i <= radius; i++) {
             if ((node+i) > (numOfNodes - 1)) {
@@ -198,7 +198,7 @@ public class SelfOrganizingMap {
         return Math.sqrt(Math.pow(x1-x2, 2) + Math.pow(y1-y2, 2));
     }
 
-    private double getTotalOrderedCityEuclDistance() {
+    private double getTotalSortedCityEuclDistance() {
         ArrayList<ArrayList<Integer>> nodeClassList = new ArrayList<>(numOfNodes);
         for (int i = 0; i < numOfNodes; i++) {
             nodeClassList.add(new ArrayList<>());
@@ -206,27 +206,27 @@ public class SelfOrganizingMap {
         for (int i = 0; i < numOfCities; i++) {
             nodeClassList.get(findBmu(i)).add(i);
         }
-        int[] orderedCityArray = new int[numOfCities];
+        int[] sortedCityArray = new int[numOfCities];
         int index = 0;
         for (int i = 0; i < numOfNodes; i++) {
             ArrayList<Integer> nodeClass = nodeClassList.get(i);
             for (int city : nodeClass) {
-                orderedCityArray[index] = city;
+                sortedCityArray[index] = city;
                 index++;
             }
         }
         double totalEuclDistance =  0;
         for (int i = 0; i < numOfCities-1; i++) {
-            int city = orderedCityArray[i];
-            int nextCity = orderedCityArray[i+1];
+            int city = sortedCityArray[i];
+            int nextCity = sortedCityArray[i+1];
             double x1 = cityCoords[city][0];
             double y1 = cityCoords[city][1];
             double x2 = cityCoords[nextCity][0];
             double y2 = cityCoords[nextCity][1];
             totalEuclDistance += euclDistance(x1, y1, x2, y2);
         }
-        int lastCity = orderedCityArray[numOfCities-1];
-        int firstCity = orderedCityArray[0];
+        int lastCity = sortedCityArray[numOfCities-1];
+        int firstCity = sortedCityArray[0];
         double x1 = cityCoords[lastCity][0];
         double y1 = cityCoords[lastCity][1];
         double x2 = cityCoords[firstCity][0];
@@ -271,7 +271,7 @@ public class SelfOrganizingMap {
         if(decayType == 0) return "STATIC";
         else if (decayType == 1) return "LIN";
         else if (decayType == 2) return "EXP";
-        return "none";
+        return "invalid";
     }
 
 

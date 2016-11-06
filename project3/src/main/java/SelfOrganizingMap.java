@@ -10,7 +10,7 @@ import org.apache.commons.io.FileUtils;
 //  gnuplot -c "C:/Users/Eivind/Documents/graph.dat"
 
 public class SelfOrganizingMap {
-    double expRadiusDecay, initLearningRate, targetLinLearningRate, expLearningDecay, initRadiusFactor, targetLinRadius;
+    double expRadiusDecay, initLearningRate, targetLinLearningRate, expLearningDecay, initRadiusNormalised, targetLinRadius;
     int nodesPerCity, learningDecayType, radiusDecayType;
 
     private boolean stepByStep, printDistPerWrite, nodeBmuOnce;
@@ -51,7 +51,7 @@ public class SelfOrganizingMap {
         writeGraphConfig(min_x, max_x, min_y, max_y);
         numOfCities = cityCoords.length;
         numOfNodes = numOfCities*nodesPerCity;
-        radius = numOfNodes*initRadiusFactor;
+        radius = numOfNodes*initRadiusNormalised;
         nodeWeights = genRandomNodes();
         linLearningDecay = (initLearningRate-targetLinLearningRate)/(double)maxEpochs;
         linRadiusDecay = (radius-targetLinRadius)/(double)maxEpochs;
@@ -100,7 +100,7 @@ public class SelfOrganizingMap {
         }
         System.out.println();
         System.out.println("Radius decay type..... " + translateDecayType(learningDecayType));
-        System.out.println("Init radius factor.... " + initRadiusFactor);
+        System.out.println("Init radius factor.... " + initRadiusNormalised);
         if (radiusDecayType == EXP) System.out.println("EXP learning decay..." + expRadiusDecay);
         else if (radiusDecayType == LIN) {
             System.out.println("LIN learning decay.... " + linRadiusDecay + " (start radius - target radius) / maxEpochs");

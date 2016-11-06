@@ -10,7 +10,7 @@ final class Settings {
             som.initLearningRate = 0.1;         // 0.1
             som.expLearningDecay = 0.001;       // 0.001
             som.initRadiusNormalised = 1.0/2;   // 1.0/2
-            som.expRadiusDecay = 0.003;          // 0.003 for small, 0.01 else
+            som.expRadiusDecay = 0.01;          // 0.003 for small, 0.01 else
             som.nodesPerCity = 8;               // 8
         }
 

@@ -26,10 +26,10 @@ public class SelfOrganizingMap {
     private SelfOrganizingMap() {
 
         // ---- SETTINGS ---------------------------------
-        area = "wi29";
+        area = "uy734";
 
-        learningDecayType = EXP; // {STATIC, LIN, EXP}
-        radiusDecayType = EXP;   // {STATIC, LIN, EXP}
+        learningDecayType = LIN; // {STATIC, LIN, EXP}
+        radiusDecayType = LIN;   // {STATIC, LIN, EXP}
         nodeBmuOnce = true;         // Improvement for all tested countries -
                                     // Helps a lot on LIN to prevent crossover with low radius
         maxEpochs = 1500;
@@ -180,7 +180,7 @@ public class SelfOrganizingMap {
 
     private double[] getNewWeights(int node, int city, int latticeDist) {
         double[] newWeights = new double[2];
-        double neighbourValue = neighbourhoodFunction(latticeDist);
+        double neighbourValue = neighbourhoodFunctionExp(latticeDist);
         double node_x = nodeWeights[node][0];
         double node_y = nodeWeights[node][1];
         double city_x = cityCoords[city][0];
@@ -190,7 +190,11 @@ public class SelfOrganizingMap {
         return newWeights;
     }
 
-    private double neighbourhoodFunction(int latticeDist){
+    private double neighbourhoodFunctionExp(int latticeDist){
+        return 1-(Math.pow(latticeDist, 2)/Math.pow(radius, 2));
+    }
+
+    private double neighbourhoodFunctionLin(int latticeDist){
         return 1-(latticeDist/radius);
     }
 

@@ -28,10 +28,10 @@ final class Settings {
         }
 
         else if (learningDecayType==LIN && radiusDecayType==EXP) {
-            som.initLearningRate = 0.6;         //  0.1 for small, 0.4 for cities>300
-            som.targetLinLearningRate = 0.3;    // 0.01 for small, 0.1 for cities>300
-            som.initRadiusNormalised = 1.0/2;   // 1.0/2
-            som.expRadiusDecay = 0.1;          // 0.01, 0.003 for < 500 cities
+            som.initLearningRate = 0.6;
+            som.targetLinLearningRate = 0.3;
+            som.initRadiusNormalised = 1.0/2;
+            som.expRadiusDecay = 0.1;
             som.nodesPerCity = 8;
         }
 
@@ -43,21 +43,21 @@ final class Settings {
             som.nodesPerCity = 8;
         }
         else if (learningDecayType==LIN && radiusDecayType==STATIC) {
-            som.initLearningRate = 0.6;         //  0.1 for small, 0.4 for cities>300
-            som.targetLinLearningRate = 0.3;    // 0.01 for small, 0.1 for cities>300
+            som.initLearningRate = 0.6;
+            som.targetLinLearningRate = 0.3;
             som.initRadiusNormalised = 1.0/20;
             som.nodesPerCity = 8;
         }
 
         else if (learningDecayType==STATIC && radiusDecayType==EXP) {
             som.initLearningRate = 0.2;
-            som.initRadiusNormalised = 1.0/5; // 1.0/5 on small, 1.0/10 on > 50
-            som.expRadiusDecay = 0.1;          // 0.01, 0.003 for < 500 cities
+            som.initRadiusNormalised = 1.0/5;
+            som.expRadiusDecay = 0.1;
             som.nodesPerCity = 8;
         }
         else if (learningDecayType==STATIC && radiusDecayType==LIN) {
             som.initLearningRate = 0.2;
-            som.initRadiusNormalised = 1.0/5; // 1.0/5 on small, 1.0/10 on > 50
+            som.initRadiusNormalised = 1.0/5;
             som.targetLinRadius = 0;
             som.nodesPerCity = 8;
         }

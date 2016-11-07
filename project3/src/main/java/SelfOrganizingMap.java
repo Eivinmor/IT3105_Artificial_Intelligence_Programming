@@ -28,8 +28,8 @@ public class SelfOrganizingMap {
         // ---- SETTINGS ---------------------------------
         area = "uy734";
 
-        learningDecayType = LIN;    // {STATIC, LIN, EXP}
-        radiusDecayType = LIN;      // {STATIC, LIN, EXP}
+        learningDecayType = EXP;    // {STATIC, LIN, EXP}
+        radiusDecayType = EXP;      // {STATIC, LIN, EXP}
         nodeBmuOnce = true;         // Improvement for all tested countries -
                                     // Helps a lot on LIN to prevent crossover with low radius
         maxEpochs = 2000;
@@ -108,7 +108,7 @@ public class SelfOrganizingMap {
         }
         System.out.println();
         System.out.println("Radius decay type..... " + translateDecayType(learningDecayType));
-        System.out.println("Init radius factor.... " + initRadiusNormalised);
+        System.out.println("Init radius normalised " + initRadiusNormalised);
         if (radiusDecayType == EXP) System.out.println("EXP radius decay...... " + expRadiusDecay);
         else if (radiusDecayType == LIN) {
             System.out.println("LIN target radius..... " + targetLinRadius);

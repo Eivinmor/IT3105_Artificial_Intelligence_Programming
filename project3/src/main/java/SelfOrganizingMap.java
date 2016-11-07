@@ -32,10 +32,10 @@ public class SelfOrganizingMap {
         radiusDecayType = LIN;      // {STATIC, LIN, EXP}
         nodeBmuOnce = true;         // Improvement for all tested countries -
                                     // Helps a lot on LIN to prevent crossover with low radius
-        maxEpochs = 10000;
+        maxEpochs = 2000;
         printDistPerWrite = false;
         stepByStep = false;
-        iterationsPerWrite = 1;
+        iterationsPerWrite = 10;
         plotIterationDelay = 0.1;
         graphMargin = 0.1;
         // -----------------------------------------------
@@ -64,8 +64,13 @@ public class SelfOrganizingMap {
         int epoch = 1;
         if(stepByStep) {
             writeWeightsToFile();
-            System.out.println("\nStep by step enabled. Press Enter to continue...");
+            if (printDistPerWrite) {
+                System.out.println("\nTotal node chain distance: " + getTotalNodeEuclDistance());
+                System.out.println("Total sorted city distance: " + getTotalSortedCityEuclDistance() + "\n");
+            }
+            System.out.println("Step by step enabled. Press Enter to continue...");
             reader.nextLine();
+
         }
         while (epoch <= maxEpochs){
             System.out.println("Epoch " + epoch);
@@ -77,7 +82,10 @@ public class SelfOrganizingMap {
                 updateNeighbourhood(bmu, city);
             }
             if(epoch % iterationsPerWrite == 0){
-                if (!writeWeightsToFile()) break;
+                if (!writeWeightsToFile()) {
+                    epoch++;
+                    break;
+                }
                 if (printDistPerWrite) {
                     System.out.println("Total node chain distance: " + getTotalNodeEuclDistance());
                     System.out.println("Total sorted city distance: " + getTotalSortedCityEuclDistance() + "\n");
@@ -101,18 +109,19 @@ public class SelfOrganizingMap {
         System.out.println();
         System.out.println("Radius decay type..... " + translateDecayType(learningDecayType));
         System.out.println("Init radius factor.... " + initRadiusNormalised);
-        if (radiusDecayType == EXP) System.out.println("EXP learning decay.... " + expRadiusDecay);
+        if (radiusDecayType == EXP) System.out.println("EXP radius decay...... " + expRadiusDecay);
         else if (radiusDecayType == LIN) {
-            System.out.println("LIN learning decay.... " + linRadiusDecay + " (start radius - target radius) / maxEpochs");
             System.out.println("LIN target radius..... " + targetLinRadius);
+            System.out.println("LIN radius decay...... " + linRadiusDecay + " (init radius - target radius) / maxEpochs");
         }
         System.out.println();
         System.out.println("Nodes per city........ " + nodesPerCity);
+        System.out.println("Number of nodes....... " + numOfNodes);
         System.out.println("Node BMU only once.... " + nodeBmuOnce);
         System.out.println("Max epochs............ " + maxEpochs);
         System.out.println("Total epochs.......... " + (epoch-1));
         System.out.println();
-        System.out.println("Total node chain distance..... " + getTotalNodeEuclDistance());
+        System.out.println("Total node chain distance.... " + getTotalNodeEuclDistance());
         System.out.println("Total sorted city distance... " + getTotalSortedCityEuclDistance());
     }
 
@@ -300,7 +309,7 @@ public class SelfOrganizingMap {
                 setMaxValues(x, y);
                 line = br.readLine();
             }
-            Collections.shuffle(newCityCoords);  // Randomizes city order to avoid left-right bias at start.
+            Collections.shuffle(newCityCoords);  // Randomizes city order to avoid sorted-axis bias at start.
             newCityCoordsArray = new double[newCityCoords.size()][];
             for (int i = 0; i < newCityCoords.size(); i++) {
                 newCityCoordsArray[i] = newCityCoords.get(i);

@@ -26,7 +26,7 @@ public class SelfOrganizingMap {
     private SelfOrganizingMap() {
 
         // ---- SETTINGS ---------------------------------
-        area = "uy734";
+        area = "wi29";
 
         learningDecayType = EXP;    // {STATIC, LIN, EXP}
         radiusDecayType = EXP;      // {STATIC, LIN, EXP}
@@ -108,7 +108,7 @@ public class SelfOrganizingMap {
         }
         System.out.println();
         System.out.println("Radius decay type..... " + translateDecayType(learningDecayType));
-        System.out.println("Init radius normalised " + initRadiusNormalised);
+        System.out.println("Init radius normalised " + initRadiusNormalised + "  (Actual radius: "+(int)(numOfNodes*initRadiusNormalised) + ")");
         if (radiusDecayType == EXP) System.out.println("EXP radius decay...... " + expRadiusDecay);
         else if (radiusDecayType == LIN) {
             System.out.println("LIN target radius..... " + targetLinRadius);

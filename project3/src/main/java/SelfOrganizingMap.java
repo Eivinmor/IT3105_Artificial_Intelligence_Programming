@@ -26,7 +26,7 @@ public class SelfOrganizingMap {
     private SelfOrganizingMap() {
 
         // ---- SETTINGS ---------------------------------
-        area = "uy734";
+        area = "alt/nu3496";
 
         learningDecayType = EXP;    // {STATIC, LIN, EXP}
         radiusDecayType = EXP;      // {STATIC, LIN, EXP}
@@ -35,7 +35,7 @@ public class SelfOrganizingMap {
         maxEpochs = 2000;
         printDistPerWrite = false;
         stepByStep = false;
-        iterationsPerWrite = 10;
+        iterationsPerWrite = 1;
         plotIterationDelay = 0.1;
         graphMargin = 0.1;
         // -----------------------------------------------
